@@ -21,16 +21,14 @@ export function pantallaCarrera(el) {
     faltantes.calendario = p.calendario;
   }
   
-  // Si falta algo y hay usuario, guardamos los faltantes
   if (Object.keys(faltantes).length > 0 && estado.user?.uid) {
       actualizarPartida(estado.user.uid, p.id, faltantes).catch(() => {});
   }
 
   const pos = POSICIONES.find(x => x.id === p.posicion)?.nombre || p.posicion;
   
-  // Filtros estrictos: proximos (no jugados) y jugados (historial)
   const proximos = p.calendario.filter(m => m.jugado !== true).slice(0, 3);
-  const jugados = p.calendario.filter(m => m.jugado === true).slice(-5).reverse(); // Últimos 5
+  const jugados = p.calendario.filter(m => m.jugado === true).slice(-5).reverse(); 
   
   const stat = (n, v) => `<div class="stat"><b>${v}</b><span>${n}</span></div>`;
   
@@ -46,7 +44,7 @@ export function pantallaCarrera(el) {
       <div class="attrs">${Object.entries(p.atributos).map(([k, v]) => `<div class="attr"><span>${ETIQUETAS[k]}</span><div class="barra"><i style="width:${v}%"></i></div><b>${v}</b></div>`).join("")}</div>
     </div>
 
-    <!-- PANEL: HISTORIAL DE PARTIDOS AL INSTANTE -->
+    <!-- HISTORIAL DE PARTIDOS -->
     <div class="panel" style="margin-bottom:16px"><h2>Historial de Partidos</h2>
       ${jugados.length > 0 ? jugados.map(m => {
           let resLoc = m.resultado?.local ?? 0;
@@ -68,16 +66,46 @@ export function pantallaCarrera(el) {
       }).join("") : "<p class='sub'>Aún no has debutado en la temporada.</p>"}
     </div>
 
+    <!-- PRÓXIMOS PARTIDOS -->
     <div class="panel" style="margin-bottom:16px"><h2>Próximos partidos</h2>
       ${proximos.map(m => `<div class="item"><span>${esc(m.etiqueta)}</span><b>${esc(textoPartido(m, p.equipo))}</b><small class="sub">${esc(m.comp)} · ${sede(m)}</small></div>`).join("") || "<p class='sub'>No quedan partidos en el calendario.</p>"}
       <div class="fila"><button class="btn" id="cal">Ver calendario completo</button></div>
     </div>
     
-    <div class="fila"><button class="btn main" id="jugar" ${proximos.length === 0 ? "disabled" : ""}>Jugar próximo partido</button><button class="btn" id="menu">Menú principal</button></div>`;
+    <div class="fila">
+        <button class="btn main" id="jugar" ${proximos.length === 0 ? "disabled" : ""}>Jugar partido</button>
+        <button class="btn" id="btn-guardar" style="background-color: #3b82f6; color: white; border: none;">Guardar</button>
+        <button class="btn" id="menu">Menú principal</button>
+    </div>`;
   
   el.querySelector("#cal").onclick = () => ir("calendario");
   el.querySelector("#menu").onclick = () => ir("menu");
   
+  // BOTÓN GUARDAR MANUAL
+  const btnGuardar = el.querySelector("#btn-guardar");
+  if(btnGuardar) {
+      btnGuardar.onclick = () => {
+          btnGuardar.innerText = "Guardando...";
+          btnGuardar.disabled = true;
+          if (estado.user && estado.user.uid) {
+              actualizarPartida(estado.user.uid, p.id, {
+                  progreso: p.progreso,
+                  atributos: p.atributos,
+                  calendario: p.calendario
+              }).then(() => {
+                  aviso("¡Partida guardada correctamente!");
+                  btnGuardar.innerText = "Guardar";
+                  btnGuardar.disabled = false;
+              }).catch(err => {
+                  aviso("Error al guardar la partida.");
+                  btnGuardar.innerText = "Guardar";
+                  btnGuardar.disabled = false;
+                  console.error(err);
+              });
+          }
+      };
+  }
+
   const btnJugar = el.querySelector("#jugar");
   if(btnJugar) {
       btnJugar.onclick = () => simularPartido(proximos[0], p);
@@ -85,7 +113,7 @@ export function pantallaCarrera(el) {
 }
 
 // ==========================================
-// SISTEMA DE NIVELES (REALISMO DE EQUIPOS)
+// SISTEMA DE NIVELES
 // ==========================================
 function calcularNivelEquipo(nombre) {
     if (!nombre) return 65;
@@ -102,7 +130,7 @@ function calcularNivelEquipo(nombre) {
 }
 
 // ==========================================
-// PASO 5: SIMULACIÓN DE PARTIDO
+// SIMULACIÓN DE PARTIDO
 // ==========================================
 function simularPartido(partidoActual, p) {
     if (!partidoActual) return aviso("No hay partidos por jugar.");
@@ -208,16 +236,23 @@ function mostrarReporte(partido, esLocal, miEquipo, rival, eventos, stats, p) {
 
     document.body.appendChild(modal);
 
-    modal.querySelector("#btn-continuar").onclick = () => {
+    // Acá usamos async/await para obligar al juego a esperar que se guarde antes de cerrar la ventana
+    modal.querySelector("#btn-continuar").onclick = async () => {
+        const btn = modal.querySelector("#btn-continuar");
+        btn.innerText = "Guardando...";
+        btn.disabled = true;
+        
+        await procesarEvolucion(partido, stats, p);
+        
         document.body.removeChild(modal);
-        procesarEvolucion(partido, stats, p);
+        ir("carrera"); // Recargamos la pantalla una vez que estamos seguros de que se guardó
     };
 }
 
 // ==========================================
-// PASO 6: EVOLUCIÓN (Al instante y Segundo plano)
+// EVOLUCIÓN CON GUARDADO SEGURO (Async/Await)
 // ==========================================
-function procesarEvolucion(partido, stats, p) {
+async function procesarEvolucion(partido, stats, p) {
     p.progreso.partidos++;
     p.progreso.goles += stats.goles;
     p.progreso.asistencias += stats.asistencias;
@@ -237,20 +272,19 @@ function procesarEvolucion(partido, stats, p) {
         if (mejora > 0) aviso(`¡Has ganado experiencia! Tu valoración se actualizó a ${p.progreso.overall}`);
     }
 
-    // 1. Etiquetamos el partido de manera estricta para que salga de "Próximos"
     partido.jugado = true;
 
-    // 2. ACTUALIZACIÓN DE PANTALLA AL INSTANTE
-    ir("carrera");
-
-    // 3. GUARDADO EN SEGUNDO PLANO EN FIREBASE
+    // Forzamos al código a esperar que Firebase responda antes de seguir
     if (estado.user && estado.user.uid) {
-        actualizarPartida(estado.user.uid, p.id, {
-            progreso: p.progreso,
-            atributos: p.atributos,
-            calendario: p.calendario
-        }).catch(err => {
-            console.error("Error guardando en la nube, pero el juego local sigue activo:", err);
-        });
+        try {
+            await actualizarPartida(estado.user.uid, p.id, {
+                progreso: p.progreso,
+                atributos: p.atributos,
+                calendario: p.calendario
+            });
+        } catch (err) {
+            console.error("Error guardando en la nube:", err);
+            aviso("Hubo un error al autoguardar. Usá el botón 'Guardar' por las dudas.");
+        }
     }
 }
