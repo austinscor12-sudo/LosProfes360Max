@@ -3,6 +3,7 @@ import { LIGAS } from "./data/equipos.js";
 import { COMPETICIONES, TEMPORADA_INICIAL } from "./data/competiciones.js";
 import { guardarPartida } from "./firebase.js";
 import { generarAtributos, calcularOverall } from "./atributos.js";
+import { generarCalendario } from "./fixture.js";
 
 const color = n => `hsl(${[...n].reduce((a, c) => a + c.charCodeAt(0) * 7, 0) % 360} 55% 38%)`;
 const sigla = n => n.replace(/\(.*?\)/g, "").trim().split(/\s+/).map(w => w[0]).join("").slice(0, 3).toUpperCase();
@@ -39,6 +40,7 @@ export function pantallaEquipo(el) {
         equipo: elegido, liga: liga.id, ligaNombre: liga.nombre,
         temporada: TEMPORADA_INICIAL, competiciones: COMPETICIONES[liga.id],
         atributos,
+        calendario: generarCalendario(elegido, liga.id),
         progreso: { partidos: 0, goles: 0, asistencias: 0, overall: calcularOverall(estado.nuevo.posicion, atributos) }
       };
       const ref = await guardarPartida(estado.user.uid, datos);
