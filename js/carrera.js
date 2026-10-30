@@ -115,6 +115,7 @@ export function pantallaCarrera(el) {
 
     <div class="panel" style="margin-bottom:16px"><h2>Próximos partidos</h2>
       ${proximos.map(m => `<div class="item"><span>${esc(m.etiqueta)}</span><b>${esc(textoPartido(m, p.equipo))}</b><small class="sub">${esc(m.comp)} · ${sede(m)}</small></div>`).join("") || "<p class='sub'>No quedan partidos en el calendario.</p>"}
+      <div class="fila"><button class="btn" id="cal">Ver calendario completo</button></div>
     </div>
     
     <div class="fila">
@@ -124,6 +125,7 @@ export function pantallaCarrera(el) {
     </div>`;
   
   el.querySelector("#menu").onclick = () => ir("menu");
+  el.querySelector("#cal").onclick = () => ir("calendario");
   el.querySelector("#btn-tabla").onclick = () => mostrarTablaPosiciones(p.equipo, p.progreso.partidos, misPuntos, misPG, misPE, misPP, misGF, misGC);
   
   // ==========================================
@@ -278,8 +280,8 @@ function simularPartido(partidoActual, p) {
     let nivelVisita = esLocal ? nivelRival : nivelMiEquipo;
 
     const pos = p.posicion;
-    let probGol = pos === 'delantero' ? 0.08 : (pos === 'mediocampista' ? 0.04 : 0.01);
-    let probAsistencia = pos === 'mediocampista' ? 0.07 : (pos === 'delantero' ? 0.05 : 0.02);
+    let probGol = pos === 'DEL' ? 0.08 : (pos === 'MED' ? 0.04 : 0.01);
+    let probAsistencia = pos === 'MED' ? 0.07 : (pos === 'DEL' ? 0.05 : 0.02);
 
     for (let min = 1; min <= 90; min++) {
         if (Math.random() < 0.08) { 
