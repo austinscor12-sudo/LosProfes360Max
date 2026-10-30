@@ -6,18 +6,16 @@ import { generarCalendario, textoPartido, sede } from "./fixture.js";
 import { actualizarPartida } from "./firebase.js";
 
 // ==========================================
-// BASE DE DATOS: EQUIPOS REALES OCTUBRE 2026
+// BASE DE DATOS: EQUIPOS (EDITÁ ESTO PARA TU 2026)
 // ==========================================
 const DATOS_EQUIPOS_2026 = {
-    "boca": { dt: "Fernando Gago", figuras: "E. Cavani, M. Merentiel, K. Zenón, L. Brey" },
-    "river": { dt: "Marcelo Gallardo", figuras: "M. Borja, M. Acuña, G. Pezzella, F. Mastantuono" },
-    "racing": { dt: "Gustavo Costas", figuras: "A. Martínez, J. Quintero, G. Arias" },
-    "independiente": { dt: "Julio Vaccari", figuras: "R. Rey, G. Ávalos, S. Montiel" },
-    "san lorenzo": { dt: "Miguel Ángel Russo", figuras: "I. Muniain, G. Gómez, E. Irala" },
-    "estudiantes": { dt: "Eduardo Domínguez", figuras: "E. Pérez, S. Ascacíbar, G. Carrillo" },
-    "talleres": { dt: "Alexander Medina", figuras: "R. Botta, F. Girotti, G. Herrera" },
-    "velez": { dt: "Gustavo Quinteros", figuras: "B. Romero, C. Aquino, T. Marchiori" },
-    "default": { dt: "DT Interino", figuras: "Plantel profesional estándar" }
+    "boca": { dt: "E. Cavani (DT)", figuras: "L. Brey, K. Zenón, I. Miramón" },
+    "river": { dt: "J. Pinola (DT)", figuras: "F. Mastantuono, S. Boselli" },
+    "racing": { dt: "Lisandro López (DT)", figuras: "M. Salas, B. Zuculini" },
+    "independiente": { dt: "C. Tevez", figuras: "S. López, M. Giménez" },
+    "san lorenzo": { dt: "L. Romagnoli", figuras: "E. Irala, G. Gómez" },
+    "estudiantes": { dt: "E. Pérez (DT)", figuras: "S. Ascacíbar, T. Palacios" },
+    "default": { dt: "DT Interino", figuras: "Plantel profesional 2026" }
 };
 
 function obtenerDatosReales(nombreEquipo) {
@@ -29,7 +27,6 @@ function obtenerDatosReales(nombreEquipo) {
 export function pantallaCarrera(el) {
   const p = estado.partida, j = p.jugador, pr = p.progreso;
 
-  // Completa las partidas viejas a las que les falta algo
   const faltantes = {};
   if (!p.atributos) {
     p.atributos = generarAtributos(p.posicion, j, p.liga);
@@ -42,12 +39,9 @@ export function pantallaCarrera(el) {
     faltantes.calendario = p.calendario;
   }
   
-  // Guardado en segundo plano con timeout
+  // Guardado de faltantes
   if (Object.keys(faltantes).length > 0 && estado.user?.uid) {
-      Promise.race([
-          actualizarPartida(estado.user.uid, p.id, faltantes),
-          new Promise((_, rj) => setTimeout(() => rj(new Error("Timeout")), 2000))
-      ]).catch(() => {});
+      actualizarPartida(estado.user.uid, p.id, JSON.parse(JSON.stringify(faltantes))).catch(() => {});
   }
 
   const pos = POSICIONES.find(x => x.id === p.posicion)?.nombre || p.posicion;
@@ -80,11 +74,11 @@ export function pantallaCarrera(el) {
     
     <div class="stats">${stat("Valoración", pr.overall)}${stat("Partidos", pr.partidos)}${stat("Goles", pr.goles)}${stat("Asistencias", pr.asistencias)}</div>
     
-    <!-- PANEL: MI CLUB (OCTUBRE 2026) -->
+    <!-- PANEL: MI CLUB -->
     <div class="panel" style="margin-bottom:16px; background:#1a1a2e; border: 1px solid #333;">
       <h2 style="color:#4ade80;">Actualidad del Club (Oct 2026)</h2>
       <p style="margin:5px 0; font-size:14px;">📋 <b>DT Actual:</b> ${datosClub.dt}</p>
-      <p style="margin:5px 0; font-size:14px;">⭐ <b>Compañeros:</b> ${datosClub.figuras}</p>
+      <p style="margin:5px 0; font-size:14px;">⭐ <b>Figuras:</b> ${datosClub.figuras}</p>
     </div>
 
     <!-- PANEL: ESTADÍSTICAS DEL EQUIPO Y TABLA -->
@@ -133,42 +127,42 @@ export function pantallaCarrera(el) {
   el.querySelector("#btn-tabla").onclick = () => mostrarTablaPosiciones(p.equipo, p.progreso.partidos, misPuntos, misPG, misPE, misPP, misGF, misGC);
   
   // ==========================================
-  // BOTÓN GUARDAR (ANTICONGELAMIENTO)
+  // BOTÓN GUARDAR MEJORADO (Evita cuelgues)
   // ==========================================
   const btnGuardar = el.querySelector("#btn-guardar");
   if(btnGuardar) {
-      btnGuardar.onclick = async () => {
+      btnGuardar.onclick = () => {
           btnGuardar.innerText = "Guardando...";
           btnGuardar.disabled = true;
           
-          // 1. Guardado Local Forzado (Para que al menos persista si no vas al menú)
-          estado.partida.progreso = p.progreso;
-          estado.partida.atributos = p.atributos;
-          estado.partida.calendario = p.calendario;
+          // Actualiza el estado global al instante para que no se borre si vas al menú
+          estado.partida = p;
 
-          // 2. Guardado en Firebase con Timeout de 3 segundos
+          // Limpiamos la data de "undefined" que bloquea Firebase
+          const datosLimpios = JSON.parse(JSON.stringify({
+              progreso: p.progreso,
+              atributos: p.atributos,
+              calendario: p.calendario
+          }));
+
           if (estado.user && estado.user.uid && p.id) {
-              try {
-                  const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 3000));
-                  await Promise.race([
-                      actualizarPartida(estado.user.uid, p.id, {
-                          progreso: p.progreso,
-                          atributos: p.atributos,
-                          calendario: p.calendario
-                      }),
-                      timeout
-                  ]);
+              actualizarPartida(estado.user.uid, p.id, datosLimpios)
+              .then(() => {
                   aviso("¡Partida guardada correctamente en la nube!");
-              } catch (err) {
+                  btnGuardar.innerText = "Guardar Partida";
+                  btnGuardar.disabled = false;
+              })
+              .catch(err => {
                   console.error("Error Firebase:", err);
-                  aviso("Guardado Local exitoso (Firebase tardó mucho o no hay red).");
-              }
+                  aviso("Error al guardar. Revisá tu conexión a internet.");
+                  btnGuardar.innerText = "Reintentar Guardado";
+                  btnGuardar.disabled = false;
+              });
           } else {
-              aviso("Guardado Local exitoso (Sin conexión a la nube).");
+              aviso("No hay usuario conectado.");
+              btnGuardar.innerText = "Guardar Partida";
+              btnGuardar.disabled = false;
           }
-          
-          btnGuardar.innerText = "Guardar Partida";
-          btnGuardar.disabled = false;
       };
   }
 
@@ -194,7 +188,6 @@ function mostrarTablaPosiciones(miEquipo, pj, pts, pg, pe, pp, gf, gc) {
         } else {
             let nivel = calcularNivelEquipo(eq);
             let ePts = 0, ePg = 0, ePe = 0, ePp = 0, eGf = 0, eGc = 0;
-            // Simulamos resultados para los rivales según su nivel y los partidos jugados
             for(let i=0; i < pj; i++) {
                 let rand = Math.random() * 100;
                 if (rand < nivel - 30) { ePts += 3; ePg++; eGf += Math.floor(Math.random()*3)+1; eGc += Math.floor(Math.random()*2); }
@@ -257,7 +250,7 @@ function mostrarTablaPosiciones(miEquipo, pj, pts, pg, pe, pp, gf, gc) {
 function calcularNivelEquipo(nombre) {
     if (!nombre) return 65;
     const nombreLow = nombre.toLowerCase();
-    const grandes = ["boca", "river", "racing", "independiente", "san lorenzo", "estudiantes", "talleres", "velez", "real madrid", "barcelona"];
+    const grandes = ["boca", "river", "racing", "independiente", "san lorenzo", "estudiantes", "talleres", "velez"];
     let base = grandes.some(g => nombreLow.includes(g)) ? 82 : 65;
     let hash = 0;
     for (let i = 0; i < nombre.length; i++) hash = nombre.charCodeAt(i) + ((hash << 5) - hash);
@@ -320,8 +313,10 @@ function simularPartido(partidoActual, p) {
     }
 
     stats.nota = Math.max(1.0, Math.min(10.0, stats.nota));
-    partidoActual.resultado = { local: golesLocal, visitante: golesVisitante };
-    partidoActual.statsJugador = { goles: stats.goles, asistencias: stats.asistencias, nota: stats.nota };
+    
+    // Aseguramos que no haya datos undefined para evitar crasheos en Firebase
+    partidoActual.resultado = { local: golesLocal || 0, visitante: golesVisitante || 0 };
+    partidoActual.statsJugador = { goles: stats.goles || 0, asistencias: stats.asistencias || 0, nota: stats.nota || 6.0 };
 
     mostrarReporte(partidoActual, esLocal, miEquipo, rival, eventos, stats, p);
 }
@@ -349,16 +344,14 @@ function mostrarReporte(partido, esLocal, miEquipo, rival, eventos, stats, p) {
 
     document.body.appendChild(modal);
 
-    modal.querySelector("#btn-continuar").onclick = async () => {
-        const btn = modal.querySelector("#btn-continuar");
-        btn.innerText = "Guardando..."; btn.disabled = true;
-        await procesarEvolucion(partido, stats, p);
+    modal.querySelector("#btn-continuar").onclick = () => {
+        procesarEvolucion(partido, stats, p);
         document.body.removeChild(modal);
         ir("carrera");
     };
 }
 
-async function procesarEvolucion(partido, stats, p) {
+function procesarEvolucion(partido, stats, p) {
     p.progreso.partidos++; p.progreso.goles += stats.goles; p.progreso.asistencias += stats.asistencias;
     let mejora = stats.nota >= 8.5 ? 2 : (stats.nota >= 7.0 ? 1 : (stats.nota <= 4.0 ? -1 : 0));
 
@@ -368,15 +361,15 @@ async function procesarEvolucion(partido, stats, p) {
     }
     partido.jugado = true;
     
-    // Fuerza guardado en RAM por si falla Firebase
-    estado.partida = p; 
-
+    estado.partida = p; // Mantiene los datos al ir al menú localmente
+    
+    // Autoguardado con limpieza de undefined
     if (estado.user && estado.user.uid && p.id) {
-        try {
-            const timeout = new Promise((_, r) => setTimeout(() => r(new Error("Timeout")), 3000));
-            await Promise.race([actualizarPartida(estado.user.uid, p.id, { progreso: p.progreso, atributos: p.atributos, calendario: p.calendario }), timeout]);
-        } catch (e) {
-            console.warn("Autoguardado: Firebase lento/sin red. Se guardó localmente.");
-        }
+        const datosLimpios = JSON.parse(JSON.stringify({
+            progreso: p.progreso,
+            atributos: p.atributos,
+            calendario: p.calendario
+        }));
+        actualizarPartida(estado.user.uid, p.id, datosLimpios).catch(e => console.warn("Error en autoguardado de fondo."));
     }
 }
