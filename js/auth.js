@@ -1,4 +1,5 @@
 import { entrar, registrar, entrarGoogle } from "./firebase.js";
+import { errorAuth } from "./util.js";
 
 export function pantallaAuth(el) {
   el.innerHTML = `
@@ -14,7 +15,7 @@ export function pantallaAuth(el) {
     </div><p class="error" id="err"></p>`;
   const err = m => el.querySelector("#err").textContent = m;
   const val = () => [el.querySelector("#em").value.trim(), el.querySelector("#pw").value];
-  const probar = fn => async () => { try { await fn(); } catch (e) { err("No se pudo entrar: " + (e.code || e.message)); } };
+  const probar = fn => async () => { err(""); try { await fn(); } catch (e) { err(errorAuth(e.code)); } };
   el.querySelector("#in").onclick = probar(() => entrar(...val()));
   el.querySelector("#reg").onclick = probar(() => registrar(...val()));
   el.querySelector("#goo").onclick = probar(entrarGoogle);

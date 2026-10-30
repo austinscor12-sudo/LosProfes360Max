@@ -30,15 +30,17 @@ export function pantallaEquipo(el) {
   el.querySelector("#lista").onclick = e => { const c = e.target.closest(".card"); if (!c) return; elegido = c.dataset.n; pintar(); };
   el.querySelector("#atras").onclick = () => ir("posicion");
   el.querySelector("#ok").onclick = async () => {
+    const ok = el.querySelector("#ok"); ok.disabled = true; ok.textContent = "Guardando…";
     try {
-      await guardarPartida(estado.user.uid, {
+      const datos = {
         jugador: estado.nuevo.jugador, posicion: estado.nuevo.posicion,
         equipo: elegido, liga: liga.id, ligaNombre: liga.nombre,
         temporada: TEMPORADA_INICIAL, competiciones: COMPETICIONES[liga.id],
         progreso: { partidos: 0, goles: 0, asistencias: 0, overall: 50 }
-      });
-      aviso("Partida guardada"); ir("menu");
-    } catch (e) { el.querySelector("#err").textContent = "No se pudo guardar: " + (e.code || e.message); }
+      };
+      const ref = await guardarPartida(estado.user.uid, datos);
+      estado.partida = { id: ref.id, ...datos }; aviso("Partida guardada"); ir("carrera");
+    } catch (e) { ok.disabled = false; ok.textContent = "Comenzar carrera"; el.querySelector("#err").textContent = "No se pudo guardar: " + (e.code || e.message); }
   };
   pintar();
 }
