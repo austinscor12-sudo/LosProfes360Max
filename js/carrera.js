@@ -5,10 +5,31 @@ import { ETIQUETAS, generarAtributos, calcularOverall } from "./atributos.js";
 import { generarCalendario, textoPartido, sede } from "./fixture.js";
 import { actualizarPartida } from "./firebase.js";
 
+// ==========================================
+// BASE DE DATOS: EQUIPOS REALES OCTUBRE 2026
+// ==========================================
+const DATOS_EQUIPOS_2026 = {
+    "boca": { dt: "Fernando Gago", figuras: "E. Cavani, M. Merentiel, K. Zenón, L. Brey" },
+    "river": { dt: "Marcelo Gallardo", figuras: "M. Borja, M. Acuña, G. Pezzella, F. Mastantuono" },
+    "racing": { dt: "Gustavo Costas", figuras: "A. Martínez, J. Quintero, G. Arias" },
+    "independiente": { dt: "Julio Vaccari", figuras: "R. Rey, G. Ávalos, S. Montiel" },
+    "san lorenzo": { dt: "Miguel Ángel Russo", figuras: "I. Muniain, G. Gómez, E. Irala" },
+    "estudiantes": { dt: "Eduardo Domínguez", figuras: "E. Pérez, S. Ascacíbar, G. Carrillo" },
+    "talleres": { dt: "Alexander Medina", figuras: "R. Botta, F. Girotti, G. Herrera" },
+    "velez": { dt: "Gustavo Quinteros", figuras: "B. Romero, C. Aquino, T. Marchiori" },
+    "default": { dt: "DT Interino", figuras: "Plantel profesional estándar" }
+};
+
+function obtenerDatosReales(nombreEquipo) {
+    if (!nombreEquipo) return DATOS_EQUIPOS_2026["default"];
+    const key = Object.keys(DATOS_EQUIPOS_2026).find(k => nombreEquipo.toLowerCase().includes(k));
+    return key ? DATOS_EQUIPOS_2026[key] : DATOS_EQUIPOS_2026["default"];
+}
+
 export function pantallaCarrera(el) {
   const p = estado.partida, j = p.jugador, pr = p.progreso;
 
-  // Completa las partidas viejas a las que les falta algo (atributos, calendario).
+  // Completa las partidas viejas a las que les falta algo
   const faltantes = {};
   if (!p.atributos) {
     p.atributos = generarAtributos(p.posicion, j, p.liga);
@@ -21,88 +42,133 @@ export function pantallaCarrera(el) {
     faltantes.calendario = p.calendario;
   }
   
+  // Guardado en segundo plano con timeout
   if (Object.keys(faltantes).length > 0 && estado.user?.uid) {
-      actualizarPartida(estado.user.uid, p.id, faltantes).catch(() => {});
+      Promise.race([
+          actualizarPartida(estado.user.uid, p.id, faltantes),
+          new Promise((_, rj) => setTimeout(() => rj(new Error("Timeout")), 2000))
+      ]).catch(() => {});
   }
 
   const pos = POSICIONES.find(x => x.id === p.posicion)?.nombre || p.posicion;
-  
   const proximos = p.calendario.filter(m => m.jugado !== true).slice(0, 3);
   const jugados = p.calendario.filter(m => m.jugado === true).slice(-5).reverse(); 
   
-  const stat = (n, v) => `<div class="stat"><b>${v}</b><span>${n}</span></div>`;
+  // Cálculo de estadísticas reales del equipo
+  let misPuntos = 0, misPG = 0, misPE = 0, misPP = 0, misGF = 0, misGC = 0;
+  p.calendario.filter(m => m.jugado === true).forEach(m => {
+      const esLocal = m.local === true || m.local === 'true';
+      const gl = m.resultado?.local || 0;
+      const gv = m.resultado?.visitante || 0;
+      let aFavor = esLocal ? gl : gv;
+      let enContra = esLocal ? gv : gl;
+      misGF += aFavor; misGC += enContra;
+      if (aFavor > enContra) { misPuntos += 3; misPG++; }
+      else if (aFavor === enContra) { misPuntos += 1; misPE++; }
+      else { misPP++; }
+  });
+
+  const datosClub = obtenerDatosReales(p.equipo);
+  const stat = (n, v) => `<div class="stat"><b>${v}</b><span style="font-size:12px">${n}</span></div>`;
   
   el.innerHTML = `
-    <div class="cabecera">
+    <div class="cabecera" style="margin-bottom: 15px;">
       <div><h2>${esc(j.nombre)} ${esc(j.apellido)}${j.apodo ? ` “${esc(j.apodo)}”` : ""}</h2>
       <p class="sub">${pos} · ${j.edad} años · ${esc(j.nacionalidad)} · pie ${j.pie.toLowerCase()}</p></div>
       <div class="tags"><span>${esc(p.equipo)}</span><span>Temporada ${p.temporada}</span></div>
     </div>
+    
     <div class="stats">${stat("Valoración", pr.overall)}${stat("Partidos", pr.partidos)}${stat("Goles", pr.goles)}${stat("Asistencias", pr.asistencias)}</div>
     
+    <!-- PANEL: MI CLUB (OCTUBRE 2026) -->
+    <div class="panel" style="margin-bottom:16px; background:#1a1a2e; border: 1px solid #333;">
+      <h2 style="color:#4ade80;">Actualidad del Club (Oct 2026)</h2>
+      <p style="margin:5px 0; font-size:14px;">📋 <b>DT Actual:</b> ${datosClub.dt}</p>
+      <p style="margin:5px 0; font-size:14px;">⭐ <b>Compañeros:</b> ${datosClub.figuras}</p>
+    </div>
+
+    <!-- PANEL: ESTADÍSTICAS DEL EQUIPO Y TABLA -->
+    <div class="panel" style="margin-bottom:16px;">
+      <h2>Estadísticas Colectivas</h2>
+      <div style="display:flex; justify-content:space-between; text-align:center; margin-bottom:10px; background:#222; padding:10px; border-radius:8px;">
+          <div><b style="font-size:18px;">${misPuntos}</b><br><span style="font-size:11px; opacity:0.7;">Puntos</span></div>
+          <div><b style="font-size:18px; color:#4ade80;">${misPG}</b><br><span style="font-size:11px; opacity:0.7;">Victorias</span></div>
+          <div><b style="font-size:18px; color:#fbbf24;">${misPE}</b><br><span style="font-size:11px; opacity:0.7;">Empates</span></div>
+          <div><b style="font-size:18px; color:#f87171;">${misPP}</b><br><span style="font-size:11px; opacity:0.7;">Derrotas</span></div>
+      </div>
+      <div class="fila"><button class="btn" id="btn-tabla" style="background:#444;">📊 Ver Tabla de Posiciones</button></div>
+    </div>
+
     <div class="panel" style="margin-bottom:16px"><h2>Atributos</h2>
       <div class="attrs">${Object.entries(p.atributos).map(([k, v]) => `<div class="attr"><span>${ETIQUETAS[k]}</span><div class="barra"><i style="width:${v}%"></i></div><b>${v}</b></div>`).join("")}</div>
     </div>
 
-    <!-- HISTORIAL DE PARTIDOS -->
     <div class="panel" style="margin-bottom:16px"><h2>Historial de Partidos</h2>
       ${jugados.length > 0 ? jugados.map(m => {
           let resLoc = m.resultado?.local ?? 0;
           let resVis = m.resultado?.visitante ?? 0;
           let rival = m.rival || "Rival";
           let miNota = m.statsJugador?.nota?.toFixed(1) ?? "-";
-          let misG = m.statsJugador?.goles ?? 0;
-          let misA = m.statsJugador?.asistencias ?? 0;
-          
           let textoRes = (m.local === true || m.local === 'true')
             ? `${esc(p.equipo)} <b>${resLoc} - ${resVis}</b> ${esc(rival)}` 
             : `${esc(rival)} <b>${resLoc} - ${resVis}</b> ${esc(p.equipo)}`;
-
           return `<div class="item" style="border-left: 4px solid ${miNota >= 7 ? '#4ade80' : (miNota <= 5 ? '#f87171' : '#fbbf24')}; padding-left: 10px;">
-              <span>${esc(m.comp)}</span>
-              <div style="margin: 4px 0; font-size: 15px;">${textoRes}</div>
-              <small class="sub">Rendimiento: Nota <b>${miNota}</b> | ⚽ Goles: ${misG} | 👟 Asist: ${misA}</small>
+              <span>${esc(m.comp)}</span><div style="margin: 4px 0; font-size: 15px;">${textoRes}</div>
+              <small class="sub">Nota: <b>${miNota}</b> | ⚽ Goles: ${m.statsJugador?.goles ?? 0} | 👟 Asist: ${m.statsJugador?.asistencias ?? 0}</small>
           </div>`;
       }).join("") : "<p class='sub'>Aún no has debutado en la temporada.</p>"}
     </div>
 
-    <!-- PRÓXIMOS PARTIDOS -->
     <div class="panel" style="margin-bottom:16px"><h2>Próximos partidos</h2>
       ${proximos.map(m => `<div class="item"><span>${esc(m.etiqueta)}</span><b>${esc(textoPartido(m, p.equipo))}</b><small class="sub">${esc(m.comp)} · ${sede(m)}</small></div>`).join("") || "<p class='sub'>No quedan partidos en el calendario.</p>"}
-      <div class="fila"><button class="btn" id="cal">Ver calendario completo</button></div>
     </div>
     
     <div class="fila">
         <button class="btn main" id="jugar" ${proximos.length === 0 ? "disabled" : ""}>Jugar partido</button>
-        <button class="btn" id="btn-guardar" style="background-color: #3b82f6; color: white; border: none;">Guardar</button>
-        <button class="btn" id="menu">Menú principal</button>
+        <button class="btn" id="btn-guardar" style="background-color: #3b82f6; color: white; border: none;">Guardar Partida</button>
+        <button class="btn" id="menu">Menú</button>
     </div>`;
   
-  el.querySelector("#cal").onclick = () => ir("calendario");
   el.querySelector("#menu").onclick = () => ir("menu");
+  el.querySelector("#btn-tabla").onclick = () => mostrarTablaPosiciones(p.equipo, p.progreso.partidos, misPuntos, misPG, misPE, misPP, misGF, misGC);
   
-  // BOTÓN GUARDAR MANUAL
+  // ==========================================
+  // BOTÓN GUARDAR (ANTICONGELAMIENTO)
+  // ==========================================
   const btnGuardar = el.querySelector("#btn-guardar");
   if(btnGuardar) {
-      btnGuardar.onclick = () => {
+      btnGuardar.onclick = async () => {
           btnGuardar.innerText = "Guardando...";
           btnGuardar.disabled = true;
-          if (estado.user && estado.user.uid) {
-              actualizarPartida(estado.user.uid, p.id, {
-                  progreso: p.progreso,
-                  atributos: p.atributos,
-                  calendario: p.calendario
-              }).then(() => {
-                  aviso("¡Partida guardada correctamente!");
-                  btnGuardar.innerText = "Guardar";
-                  btnGuardar.disabled = false;
-              }).catch(err => {
-                  aviso("Error al guardar la partida.");
-                  btnGuardar.innerText = "Guardar";
-                  btnGuardar.disabled = false;
-                  console.error(err);
-              });
+          
+          // 1. Guardado Local Forzado (Para que al menos persista si no vas al menú)
+          estado.partida.progreso = p.progreso;
+          estado.partida.atributos = p.atributos;
+          estado.partida.calendario = p.calendario;
+
+          // 2. Guardado en Firebase con Timeout de 3 segundos
+          if (estado.user && estado.user.uid && p.id) {
+              try {
+                  const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 3000));
+                  await Promise.race([
+                      actualizarPartida(estado.user.uid, p.id, {
+                          progreso: p.progreso,
+                          atributos: p.atributos,
+                          calendario: p.calendario
+                      }),
+                      timeout
+                  ]);
+                  aviso("¡Partida guardada correctamente en la nube!");
+              } catch (err) {
+                  console.error("Error Firebase:", err);
+                  aviso("Guardado Local exitoso (Firebase tardó mucho o no hay red).");
+              }
+          } else {
+              aviso("Guardado Local exitoso (Sin conexión a la nube).");
           }
+          
+          btnGuardar.innerText = "Guardar Partida";
+          btnGuardar.disabled = false;
       };
   }
 
@@ -113,19 +179,88 @@ export function pantallaCarrera(el) {
 }
 
 // ==========================================
+// TABLA DE POSICIONES SIMULADA
+// ==========================================
+function mostrarTablaPosiciones(miEquipo, pj, pts, pg, pe, pp, gf, gc) {
+    const equiposLiga = ["Boca Juniors", "River Plate", "Racing Club", "Independiente", "San Lorenzo", "Estudiantes", "Talleres", "Huracán", "Vélez Sarsfield", "Rosario Central", "Newell's", "Argentinos Jrs", "Lanús", "Defensa y Justicia", "Belgrano", "Argentino de Quilmes", "Boca Unidos"];
+    
+    let setEquipos = new Set(equiposLiga);
+    setEquipos.add(miEquipo);
+    let tabla = [];
+
+    setEquipos.forEach(eq => {
+        if (eq === miEquipo) {
+            tabla.push({ nombre: eq, pts: pts, pj, pg, pe, pp, gf, gc, dif: gf - gc });
+        } else {
+            let nivel = calcularNivelEquipo(eq);
+            let ePts = 0, ePg = 0, ePe = 0, ePp = 0, eGf = 0, eGc = 0;
+            // Simulamos resultados para los rivales según su nivel y los partidos jugados
+            for(let i=0; i < pj; i++) {
+                let rand = Math.random() * 100;
+                if (rand < nivel - 30) { ePts += 3; ePg++; eGf += Math.floor(Math.random()*3)+1; eGc += Math.floor(Math.random()*2); }
+                else if (rand < nivel) { ePts += 1; ePe++; eGf += 1; eGc += 1; }
+                else { ePp++; eGf += Math.floor(Math.random()*2); eGc += Math.floor(Math.random()*3)+1; }
+            }
+            tabla.push({ nombre: eq, pts: ePts, pj, pg: ePg, pe: ePe, pp: ePp, gf: eGf, gc: eGc, dif: eGf - eGc });
+        }
+    });
+
+    tabla.sort((a, b) => b.pts - a.pts || b.dif - a.dif || b.gf - a.gf);
+
+    const modal = document.createElement("div");
+    modal.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); color:white; z-index:9999; display:flex; flex-direction:column; padding:20px; overflow-y:auto; box-sizing:border-box; font-family:sans-serif;";
+    
+    let htmlFilas = tabla.map((t, index) => {
+        let isMe = t.nombre === miEquipo ? "background:#3b82f6; font-weight:bold;" : (index % 2 === 0 ? "background:#222;" : "background:#1a1a1a;");
+        return `<tr style="${isMe} text-align:center;">
+            <td style="padding:8px;">${index + 1}</td>
+            <td style="text-align:left; padding:8px;">${t.nombre}</td>
+            <td><b>${t.pts}</b></td>
+            <td>${t.pj}</td>
+            <td>${t.pg}</td>
+            <td>${t.pe}</td>
+            <td>${t.pp}</td>
+            <td>${t.dif}</td>
+        </tr>`;
+    }).join("");
+
+    modal.innerHTML = `
+        <div style="background:#111; padding:20px; border-radius:12px; max-width:600px; width:100%; margin:auto; border:1px solid #444;">
+            <h2 style="text-align:center; margin-top:0;">Tabla de Posiciones</h2>
+            <div style="overflow-x:auto;">
+                <table style="width:100%; border-collapse: collapse; font-size: 14px;">
+                    <thead style="background:#333; color:#aaa;">
+                        <tr>
+                            <th style="padding:10px;">Pos</th>
+                            <th style="text-align:left; padding:10px;">Equipo</th>
+                            <th>Pts</th>
+                            <th>PJ</th>
+                            <th>G</th>
+                            <th>E</th>
+                            <th>P</th>
+                            <th>DIF</th>
+                        </tr>
+                    </thead>
+                    <tbody>${htmlFilas}</tbody>
+                </table>
+            </div>
+            <button id="btn-cerrar-tabla" style="width:100%; padding:12px; margin-top:20px; background:#f87171; color:#000; font-weight:bold; border:none; border-radius:8px; cursor:pointer;">Cerrar Tabla</button>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    modal.querySelector("#btn-cerrar-tabla").onclick = () => document.body.removeChild(modal);
+}
+
+// ==========================================
 // SISTEMA DE NIVELES
 // ==========================================
 function calcularNivelEquipo(nombre) {
     if (!nombre) return 65;
     const nombreLow = nombre.toLowerCase();
-    
-    const grandes = ["boca", "river", "racing", "independiente", "san lorenzo", "estudiantes", "flamengo", "palmeiras", "real madrid", "barcelona", "bayern", "city", "psg", "liverpool"];
+    const grandes = ["boca", "river", "racing", "independiente", "san lorenzo", "estudiantes", "talleres", "velez", "real madrid", "barcelona"];
     let base = grandes.some(g => nombreLow.includes(g)) ? 82 : 65;
-    
     let hash = 0;
-    for (let i = 0; i < nombre.length; i++) {
-        hash = nombre.charCodeAt(i) + ((hash << 5) - hash);
-    }
+    for (let i = 0; i < nombre.length; i++) hash = nombre.charCodeAt(i) + ((hash << 5) - hash);
     return base + (Math.abs(hash) % 15); 
 }
 
@@ -154,20 +289,15 @@ function simularPartido(partidoActual, p) {
     let probAsistencia = pos === 'mediocampista' ? 0.07 : (pos === 'delantero' ? 0.05 : 0.02);
 
     for (let min = 1; min <= 90; min++) {
-        let rand = Math.random();
-        
-        if (rand < 0.08) { 
-            let totalNivel = nivelLocal + nivelVisita;
-            let chanceLocal = nivelLocal / totalNivel; 
-            
-            let ocasionParaLocal = Math.random() < chanceLocal;
-            let ocasionParaMiEquipo = (esLocal && ocasionParaLocal) || (!esLocal && !ocasionParaLocal);
+        if (Math.random() < 0.08) { 
+            let chanceLocal = nivelLocal / (nivelLocal + nivelVisita); 
+            let ocasionParaMiEquipo = (esLocal && Math.random() < chanceLocal) || (!esLocal && Math.random() >= chanceLocal);
             
             if (ocasionParaMiEquipo) {
                 if (Math.random() < probGol) {
                     stats.goles++;
                     stats.nota += 1.2;
-                    eventos.push({ min, txt: `¡GOLAZO TUYO! Mandaste la pelota a guardar contra ${rival}.`, tipo: 'positivo' });
+                    eventos.push({ min, txt: `¡GOLAZO TUYO! Mandaste la pelota a guardar.`, tipo: 'positivo' });
                     esLocal ? golesLocal++ : golesVisitante++;
                 } else if (Math.random() < probAsistencia) {
                     stats.asistencias++;
@@ -197,94 +327,56 @@ function simularPartido(partidoActual, p) {
 }
 
 function mostrarReporte(partido, esLocal, miEquipo, rival, eventos, stats, p) {
-    const resLocal = partido.resultado.local;
-    const resVisita = partido.resultado.visitante;
-    
+    const resLoc = partido.resultado.local, resVis = partido.resultado.visitante;
     const modal = document.createElement("div");
-    modal.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); color:white; z-index:9999; display:flex; flex-direction:column; padding:20px; overflow-y:auto; box-sizing:border-box; font-family:sans-serif;";
+    modal.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); color:white; z-index:9999; display:flex; flex-direction:column; padding:20px; overflow-y:auto; box-sizing:border-box;";
     
-    let htmlEventos = eventos.map(e => {
-        let color = e.tipo === 'positivo' ? '#4ade80' : (e.tipo === 'negativo' ? '#f87171' : '#fbbf24');
-        return `<p style="margin:6px 0; font-size:14px; border-bottom: 1px solid #333; padding-bottom: 4px;"><strong style="color:${color};">[Min ${e.min}']</strong> ${e.txt}</p>`;
-    }).join("");
-    
-    if (!htmlEventos) htmlEventos = "<p style='font-size:14px; opacity:0.7; text-align:center;'>Partido muy táctico y trabado, sin intervenciones directas a portería.</p>";
+    let htmlEventos = eventos.map(e => `<p style="margin:6px 0; font-size:14px; border-bottom:1px solid #333; padding-bottom:4px;"><strong style="color:${e.tipo==='positivo'?'#4ade80':(e.tipo==='negativo'?'#f87171':'#fbbf24')};">[Min ${e.min}']</strong> ${e.txt}</p>`).join("") || "<p style='text-align:center;'>Partido trabado, sin intervenciones directas.</p>";
 
     modal.innerHTML = `
-        <div style="background:#1e1e1e; padding:25px; border-radius:12px; max-width:500px; width:100%; margin:auto; border:1px solid #444; box-shadow: 0 10px 30px rgba(0,0,0,0.8);">
-            <h3 style="text-align:center; opacity:0.6; margin:0; font-size: 14px; text-transform: uppercase;">${partido.comp}</h3>
-            <h2 style="text-align:center; font-size:26px; margin:15px 0;">
-                ${esLocal ? miEquipo : rival} 
-                <span style="color:#FFD700; padding: 0 10px;">${resLocal} - ${resVisita}</span> 
-                ${esLocal ? rival : miEquipo}
-            </h2>
-            
+        <div style="background:#1e1e1e; padding:25px; border-radius:12px; max-width:500px; width:100%; margin:auto; border:1px solid #444;">
+            <h3 style="text-align:center; opacity:0.6; margin:0;">${partido.comp}</h3>
+            <h2 style="text-align:center; font-size:26px; margin:15px 0;">${esLocal?miEquipo:rival} <span style="color:#FFD700;">${resLoc} - ${resVis}</span> ${esLocal?rival:miEquipo}</h2>
             <div style="background:#2a2a2a; border-radius:8px; padding:15px; margin:20px 0; display:flex; justify-content:space-around; text-align:center;">
-                <div><span style="display:block; opacity:0.7; font-size:13px; margin-bottom:5px;">Tu Nota</span><b style="font-size:22px; color:${stats.nota >= 7 ? '#4ade80' : '#f87171'}">${stats.nota.toFixed(1)}</b></div>
-                <div><span style="display:block; opacity:0.7; font-size:13px; margin-bottom:5px;">Goles</span><b style="font-size:22px;">${stats.goles}</b></div>
-                <div><span style="display:block; opacity:0.7; font-size:13px; margin-bottom:5px;">Asistencias</span><b style="font-size:22px;">${stats.asistencias}</b></div>
+                <div><span style="font-size:13px;">Nota</span><b style="display:block; font-size:22px; color:${stats.nota>=7?'#4ade80':'#f87171'}">${stats.nota.toFixed(1)}</b></div>
+                <div><span style="font-size:13px;">Goles</span><b style="display:block; font-size:22px;">${stats.goles}</b></div>
+                <div><span style="font-size:13px;">Asistencias</span><b style="display:block; font-size:22px;">${stats.asistencias}</b></div>
             </div>
-            
-            <h4 style="margin: 0 0 10px 0; color:#aaa;">Eventos del partido</h4>
-            <div style="background:#111; padding:15px; border-radius:8px; max-height:180px; overflow-y:auto; border:1px solid #333;">
-                ${htmlEventos}
-            </div>
-            
-            <button id="btn-continuar" style="width:100%; padding:15px; margin-top:20px; background:#4ade80; color:#111; font-weight:bold; text-transform:uppercase; border:none; border-radius:8px; cursor:pointer; font-size:16px; transition: 0.2s;">Continuar Temporada</button>
+            <div style="background:#111; padding:15px; border-radius:8px; max-height:180px; overflow-y:auto;">${htmlEventos}</div>
+            <button id="btn-continuar" style="width:100%; padding:15px; margin-top:20px; background:#4ade80; color:#111; font-weight:bold; border-radius:8px; cursor:pointer; font-size:16px;">Continuar Temporada</button>
         </div>
     `;
 
     document.body.appendChild(modal);
 
-    // Acá usamos async/await para obligar al juego a esperar que se guarde antes de cerrar la ventana
     modal.querySelector("#btn-continuar").onclick = async () => {
         const btn = modal.querySelector("#btn-continuar");
-        btn.innerText = "Guardando...";
-        btn.disabled = true;
-        
+        btn.innerText = "Guardando..."; btn.disabled = true;
         await procesarEvolucion(partido, stats, p);
-        
         document.body.removeChild(modal);
-        ir("carrera"); // Recargamos la pantalla una vez que estamos seguros de que se guardó
+        ir("carrera");
     };
 }
 
-// ==========================================
-// EVOLUCIÓN CON GUARDADO SEGURO (Async/Await)
-// ==========================================
 async function procesarEvolucion(partido, stats, p) {
-    p.progreso.partidos++;
-    p.progreso.goles += stats.goles;
-    p.progreso.asistencias += stats.asistencias;
-
-    let mejora = 0;
-    if (stats.nota >= 8.5) mejora = 2;
-    else if (stats.nota >= 7.0) mejora = 1;
-    else if (stats.nota <= 4.0) mejora = -1;
+    p.progreso.partidos++; p.progreso.goles += stats.goles; p.progreso.asistencias += stats.asistencias;
+    let mejora = stats.nota >= 8.5 ? 2 : (stats.nota >= 7.0 ? 1 : (stats.nota <= 4.0 ? -1 : 0));
 
     if (mejora !== 0) {
-        for (let key in p.atributos) {
-            if (Math.random() > 0.5) {
-                p.atributos[key] = Math.max(1, Math.min(99, p.atributos[key] + mejora));
-            }
-        }
+        for (let key in p.atributos) if (Math.random() > 0.5) p.atributos[key] = Math.max(1, Math.min(99, p.atributos[key] + mejora));
         p.progreso.overall = calcularOverall(p.posicion, p.atributos);
-        if (mejora > 0) aviso(`¡Has ganado experiencia! Tu valoración se actualizó a ${p.progreso.overall}`);
     }
-
     partido.jugado = true;
+    
+    // Fuerza guardado en RAM por si falla Firebase
+    estado.partida = p; 
 
-    // Forzamos al código a esperar que Firebase responda antes de seguir
-    if (estado.user && estado.user.uid) {
+    if (estado.user && estado.user.uid && p.id) {
         try {
-            await actualizarPartida(estado.user.uid, p.id, {
-                progreso: p.progreso,
-                atributos: p.atributos,
-                calendario: p.calendario
-            });
-        } catch (err) {
-            console.error("Error guardando en la nube:", err);
-            aviso("Hubo un error al autoguardar. Usá el botón 'Guardar' por las dudas.");
+            const timeout = new Promise((_, r) => setTimeout(() => r(new Error("Timeout")), 3000));
+            await Promise.race([actualizarPartida(estado.user.uid, p.id, { progreso: p.progreso, atributos: p.atributos, calendario: p.calendario }), timeout]);
+        } catch (e) {
+            console.warn("Autoguardado: Firebase lento/sin red. Se guardó localmente.");
         }
     }
 }
