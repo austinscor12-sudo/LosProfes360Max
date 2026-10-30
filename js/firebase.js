@@ -29,3 +29,4 @@ export async function listarPartidas(uid) {
   const s = await getDocs(query(partidas(uid), orderBy("creada", "desc")));
   return s.docs.map(d => ({ id: d.id, ...d.data() }));
 }
+export const actualizarPartida = (uid, id, data) => updateDoc(doc(db, "users", uid, "partidas", id), data);

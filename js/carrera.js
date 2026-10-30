@@ -2,9 +2,16 @@ import { ir, estado, aviso } from "./router.js";
 import { LIGAS } from "./data/equipos.js";
 import { POSICIONES } from "./data/competiciones.js";
 import { esc } from "./util.js";
+import { ETIQUETAS, generarAtributos, calcularOverall } from "./atributos.js";
+import { actualizarPartida } from "./firebase.js";
 
 export function pantallaCarrera(el) {
   const p = estado.partida, j = p.jugador, pr = p.progreso;
+      if (!p.atributos) {
+      p.atributos = generarAtributos(p.posicion, j, p.liga);
+      pr.overall = calcularOverall(p.posicion, p.atributos);
+      actualizarPartida(estado.user.uid, p.id, { atributos: p.atributos, "progreso.overall": pr.overall }).catch(() => {});
+    }
   const pos = POSICIONES.find(x => x.id === p.posicion)?.nombre || p.posicion;
   const rivales = LIGAS.find(l => l.id === p.liga).equipos.filter(n => n !== p.equipo);
   const inicio = [...p.equipo].reduce((a, c) => a + c.charCodeAt(0), 0);
@@ -17,6 +24,9 @@ export function pantallaCarrera(el) {
       <div class="tags"><span>${esc(p.equipo)}</span><span>Temporada ${p.temporada}</span></div>
     </div>
     <div class="stats">${stat("Valoración", pr.overall)}${stat("Partidos", pr.partidos)}${stat("Goles", pr.goles)}${stat("Asistencias", pr.asistencias)}</div>
+        <div class="panel" style="margin-bottom:16px"><h2>Atributos</h2>
+      <div class="attrs">${Object.entries(p.atributos).map(([k, v]) => `<div class="attr"><span>${ETIQUETAS[k]}</span><div class="barra"><i style="width:${v}%"></i></div><b>${v}</b></div>`).join("")}</div>
+    </div>
     <div class="panel" style="margin-bottom:16px"><h2>Próximos partidos</h2>
       <p class="sub">Torneo Apertura (fixture provisional)</p>
       ${fixture.map(f => `<div class="item"><span>Fecha ${f.fecha}</span><b>${f.local ? `${esc(p.equipo)} vs ${esc(f.rival)}` : `${esc(f.rival)} vs ${esc(p.equipo)}`}</b><small class="sub">${f.local ? "Local" : "Visitante"}</small></div>`).join("")}

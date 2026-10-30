@@ -40,3 +40,9 @@ input[readonly]{opacity:.7}
 .stat b{display:block;font-family:Impact,"Arial Narrow Bold",sans-serif;font-weight:400;font-size:2.2rem;color:var(--oro);line-height:1.1}
 .stat span{color:var(--gris);font-size:.85rem}
 [hidden]{display:none!important}
+.attrs{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px 24px;margin-top:10px}
+.attr{display:grid;grid-template-columns:90px 1fr 32px;align-items:center;gap:10px;font-size:.9rem}
+.attr span{color:var(--gris)}
+.attr b{text-align:right}
+.barra{height:8px;background:rgba(255,255,255,.1);border-radius:99px;overflow:hidden}
+.barra i{display:block;height:100%;background:var(--oro)}
