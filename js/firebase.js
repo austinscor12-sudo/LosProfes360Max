@@ -4,10 +4,12 @@ import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, orderBy, que
 
 // Pegá acá tu config (Firebase > Configuración del proyecto > Tus apps > Web)
 const firebaseConfig = {
-  apiKey: "TU_API_KEY",
-  authDomain: "TU_PROYECTO.firebaseapp.com",
-  projectId: "TU_PROYECTO",
-  appId: "TU_APP_ID"
+  apiKey: "AIzaSyCx9wEpUZVqujKLn5hi9aRQL5o2cslsH7A",
+  authDomain: "futcarrera-5c52f.firebaseapp.com",
+  projectId: "futcarrera-5c52f",
+  storageBucket: "futcarrera-5c52f.firebasestorage.app",
+  messagingSenderId: "369866868190",
+  appId: "1:369866868190:web:bfa3b52049331a7565494f"
 };
 
 const app = initializeApp(firebaseConfig);
