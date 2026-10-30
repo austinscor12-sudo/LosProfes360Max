@@ -16,17 +16,21 @@ export function pantallaCarrera(el) {
     faltantes.atributos = p.atributos;
     faltantes["progreso.overall"] = pr.overall;
   }
-  if (!p.calendario) {
+  if (!p.calendario || p.calendario.length === 0) {
     p.calendario = generarCalendario(p.equipo, p.liga);
     faltantes.calendario = p.calendario;
   }
-  if (Object.keys(faltantes).length) actualizarPartida(estado.user.uid, p.id, faltantes).catch(() => {});
+  
+  // Si falta algo y hay usuario, guardamos los faltantes
+  if (Object.keys(faltantes).length > 0 && estado.user?.uid) {
+      actualizarPartida(estado.user.uid, p.id, faltantes).catch(() => {});
+  }
 
   const pos = POSICIONES.find(x => x.id === p.posicion)?.nombre || p.posicion;
   
-  // Dividimos el calendario en próximos y jugados
-  const proximos = p.calendario.filter(m => !m.jugado).slice(0, 3);
-  const jugados = p.calendario.filter(m => m.jugado).slice(-5).reverse(); // Últimos 5 partidos jugados
+  // Filtros estrictos: proximos (no jugados) y jugados (historial)
+  const proximos = p.calendario.filter(m => m.jugado !== true).slice(0, 3);
+  const jugados = p.calendario.filter(m => m.jugado === true).slice(-5).reverse(); // Últimos 5
   
   const stat = (n, v) => `<div class="stat"><b>${v}</b><span>${n}</span></div>`;
   
@@ -42,7 +46,7 @@ export function pantallaCarrera(el) {
       <div class="attrs">${Object.entries(p.atributos).map(([k, v]) => `<div class="attr"><span>${ETIQUETAS[k]}</span><div class="barra"><i style="width:${v}%"></i></div><b>${v}</b></div>`).join("")}</div>
     </div>
 
-    <!-- PANEL: HISTORIAL DE PARTIDOS -->
+    <!-- PANEL: HISTORIAL DE PARTIDOS AL INSTANTE -->
     <div class="panel" style="margin-bottom:16px"><h2>Historial de Partidos</h2>
       ${jugados.length > 0 ? jugados.map(m => {
           let resLoc = m.resultado?.local ?? 0;
@@ -52,11 +56,11 @@ export function pantallaCarrera(el) {
           let misG = m.statsJugador?.goles ?? 0;
           let misA = m.statsJugador?.asistencias ?? 0;
           
-          let textoRes = m.local 
+          let textoRes = (m.local === true || m.local === 'true')
             ? `${esc(p.equipo)} <b>${resLoc} - ${resVis}</b> ${esc(rival)}` 
             : `${esc(rival)} <b>${resLoc} - ${resVis}</b> ${esc(p.equipo)}`;
 
-          return `<div class="item" style="border-left: 4px solid ${miNota >= 7 ? '#4ade80' : '#f87171'}; padding-left: 10px;">
+          return `<div class="item" style="border-left: 4px solid ${miNota >= 7 ? '#4ade80' : (miNota <= 5 ? '#f87171' : '#fbbf24')}; padding-left: 10px;">
               <span>${esc(m.comp)}</span>
               <div style="margin: 4px 0; font-size: 15px;">${textoRes}</div>
               <small class="sub">Rendimiento: Nota <b>${miNota}</b> | ⚽ Goles: ${misG} | 👟 Asist: ${misA}</small>
@@ -87,17 +91,14 @@ function calcularNivelEquipo(nombre) {
     if (!nombre) return 65;
     const nombreLow = nombre.toLowerCase();
     
-    // Equipos grandes (reciben un plus de nivel)
     const grandes = ["boca", "river", "racing", "independiente", "san lorenzo", "estudiantes", "flamengo", "palmeiras", "real madrid", "barcelona", "bayern", "city", "psg", "liverpool"];
-    
     let base = grandes.some(g => nombreLow.includes(g)) ? 82 : 65;
     
-    // Generar un nivel consistente basado en el nombre para que el mismo equipo siempre tenga la misma fuerza
     let hash = 0;
     for (let i = 0; i < nombre.length; i++) {
         hash = nombre.charCodeAt(i) + ((hash << 5) - hash);
     }
-    return base + (Math.abs(hash) % 15); // Resultado: Equipos chicos entre 65-80, Grandes entre 82-97
+    return base + (Math.abs(hash) % 15); 
 }
 
 // ==========================================
@@ -106,7 +107,6 @@ function calcularNivelEquipo(nombre) {
 function simularPartido(partidoActual, p) {
     if (!partidoActual) return aviso("No hay partidos por jugar.");
 
-    // Corrección del bug booleano: ahora identificamos bien al rival y la localía
     const esLocal = partidoActual.local === true || partidoActual.local === 'true';
     const rival = partidoActual.rival || "Rival";
     const miEquipo = p.equipo;
@@ -115,27 +115,22 @@ function simularPartido(partidoActual, p) {
     let eventos = [];
     let stats = { goles: 0, asistencias: 0, nota: 6.0 };
 
-    // Cálculo de fuerzas (Realismo)
     let nivelMiEquipo = calcularNivelEquipo(miEquipo) + (p.progreso.overall * 0.1); 
     let nivelRival = calcularNivelEquipo(rival);
     
-    // Ventaja de localía (+4 puntos al local)
     let nivelLocal = esLocal ? nivelMiEquipo + 4 : nivelRival + 4;
     let nivelVisita = esLocal ? nivelRival : nivelMiEquipo;
 
-    // Probabilidades individuales del jugador
     const pos = p.posicion;
     let probGol = pos === 'delantero' ? 0.08 : (pos === 'mediocampista' ? 0.04 : 0.01);
     let probAsistencia = pos === 'mediocampista' ? 0.07 : (pos === 'delantero' ? 0.05 : 0.02);
 
-    // Simulación de los 90 minutos
     for (let min = 1; min <= 90; min++) {
         let rand = Math.random();
         
-        // 8% de chance de que pase una jugada de peligro por minuto
         if (rand < 0.08) { 
             let totalNivel = nivelLocal + nivelVisita;
-            let chanceLocal = nivelLocal / totalNivel; // El mejor equipo tiene más % de que la ocasión sea suya
+            let chanceLocal = nivelLocal / totalNivel; 
             
             let ocasionParaLocal = Math.random() < chanceLocal;
             let ocasionParaMiEquipo = (esLocal && ocasionParaLocal) || (!esLocal && !ocasionParaLocal);
@@ -151,15 +146,14 @@ function simularPartido(partidoActual, p) {
                     stats.nota += 0.8;
                     eventos.push({ min, txt: `¡Asistencia perfecta tuya para el gol!`, tipo: 'positivo' });
                     esLocal ? golesLocal++ : golesVisitante++;
-                } else if (Math.random() < 0.25) { // 25% chance de que anote otro del equipo
+                } else if (Math.random() < 0.25) { 
                     stats.nota += 0.1;
                     eventos.push({ min, txt: `¡Gol de ${miEquipo}! Gran jugada colectiva.`, tipo: 'positivo' });
                     esLocal ? golesLocal++ : golesVisitante++;
                 }
             } else {
-                // Ocasión para el equipo rival
                 if (Math.random() < 0.3) {
-                    stats.nota -= 0.15; // Baja un poco tu nota si reciben gol
+                    stats.nota -= 0.15;
                     eventos.push({ min, txt: `Gol de ${rival}. Superaron a nuestra defensa.`, tipo: 'negativo' });
                     esLocal ? golesVisitante++ : golesLocal++;
                 }
@@ -169,8 +163,6 @@ function simularPartido(partidoActual, p) {
 
     stats.nota = Math.max(1.0, Math.min(10.0, stats.nota));
     partidoActual.resultado = { local: golesLocal, visitante: golesVisitante };
-    
-    // Guardamos tus estadísticas para mostrarlas en el historial luego
     partidoActual.statsJugador = { goles: stats.goles, asistencias: stats.asistencias, nota: stats.nota };
 
     mostrarReporte(partidoActual, esLocal, miEquipo, rival, eventos, stats, p);
@@ -187,6 +179,7 @@ function mostrarReporte(partido, esLocal, miEquipo, rival, eventos, stats, p) {
         let color = e.tipo === 'positivo' ? '#4ade80' : (e.tipo === 'negativo' ? '#f87171' : '#fbbf24');
         return `<p style="margin:6px 0; font-size:14px; border-bottom: 1px solid #333; padding-bottom: 4px;"><strong style="color:${color};">[Min ${e.min}']</strong> ${e.txt}</p>`;
     }).join("");
+    
     if (!htmlEventos) htmlEventos = "<p style='font-size:14px; opacity:0.7; text-align:center;'>Partido muy táctico y trabado, sin intervenciones directas a portería.</p>";
 
     modal.innerHTML = `
@@ -222,7 +215,7 @@ function mostrarReporte(partido, esLocal, miEquipo, rival, eventos, stats, p) {
 }
 
 // ==========================================
-// PASO 6: EVOLUCIÓN
+// PASO 6: EVOLUCIÓN (Al instante y Segundo plano)
 // ==========================================
 function procesarEvolucion(partido, stats, p) {
     p.progreso.partidos++;
@@ -244,16 +237,20 @@ function procesarEvolucion(partido, stats, p) {
         if (mejora > 0) aviso(`¡Has ganado experiencia! Tu valoración se actualizó a ${p.progreso.overall}`);
     }
 
+    // 1. Etiquetamos el partido de manera estricta para que salga de "Próximos"
     partido.jugado = true;
 
-    actualizarPartida(estado.user.uid, p.id, {
-        progreso: p.progreso,
-        atributos: p.atributos,
-        calendario: p.calendario
-    }).then(() => {
-        ir("carrera");
-    }).catch(err => {
-        aviso("Hubo un error al guardar el progreso.");
-        console.error(err);
-    });
+    // 2. ACTUALIZACIÓN DE PANTALLA AL INSTANTE
+    ir("carrera");
+
+    // 3. GUARDADO EN SEGUNDO PLANO EN FIREBASE
+    if (estado.user && estado.user.uid) {
+        actualizarPartida(estado.user.uid, p.id, {
+            progreso: p.progreso,
+            atributos: p.atributos,
+            calendario: p.calendario
+        }).catch(err => {
+            console.error("Error guardando en la nube, pero el juego local sigue activo:", err);
+        });
+    }
 }
