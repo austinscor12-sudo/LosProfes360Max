@@ -4,6 +4,9 @@ import { esc } from "./util.js";
 import { ETIQUETAS, generarAtributos, calcularOverall } from "./atributos.js";
 import { generarCalendario, textoPartido, sede } from "./fixture.js";
 import { actualizarPartida } from "./firebase.js";
+import { crearLiga, registrarFecha, puestoEnZona } from "./liga.js";
+import { mostrarTabla } from "./tabla.js";
+import { fuerzaDe } from "./data/fuerza.js";
 
 // ==========================================
 // BASE DE DATOS: EQUIPOS (EDITÁ ESTO PARA TU 2026)
@@ -34,6 +37,16 @@ export function pantallaCarrera(el) {
     faltantes.atributos = p.atributos;
     faltantes["progreso.overall"] = pr.overall;
   }
+  if (p.liga === "AR1" && !p.fixture) {
+    // Partida vieja: se arma la liga real (zonas y fixture de los 30 equipos). Los partidos viejos se descartan.
+    const lg = crearLiga(p.equipo);
+    if (lg) {
+      p.zona = lg.zona; p.equiposLiga = lg.equipos; p.fixture = lg.fixture; p.calendario = lg.calendario;
+      pr.partidos = 0; pr.goles = 0; pr.asistencias = 0;
+      delete faltantes["progreso.overall"];
+      Object.assign(faltantes, { zona: p.zona, equiposLiga: p.equiposLiga, fixture: p.fixture, calendario: p.calendario, progreso: pr });
+    }
+  }
   if (!p.calendario || p.calendario.length === 0) {
     p.calendario = generarCalendario(p.equipo, p.liga);
     faltantes.calendario = p.calendario;
@@ -50,7 +63,7 @@ export function pantallaCarrera(el) {
   
   // Cálculo de estadísticas reales del equipo
   let misPuntos = 0, misPG = 0, misPE = 0, misPP = 0, misGF = 0, misGC = 0;
-  p.calendario.filter(m => m.jugado === true).forEach(m => {
+  p.calendario.filter(m => m.jugado === true && (!p.fixture || m.torneo)).forEach(m => {
       const esLocal = m.local === true || m.local === 'true';
       const gl = m.resultado?.local || 0;
       const gv = m.resultado?.visitante || 0;
@@ -61,6 +74,12 @@ export function pantallaCarrera(el) {
       else if (aFavor === enContra) { misPuntos += 1; misPE++; }
       else { misPP++; }
   });
+
+  let infoZona = "";
+  if (p.fixture) {
+    const z = puestoEnZona(p);
+    infoZona = `<p class="sub" style="margin-bottom:10px">Zona ${p.zona} · ${z.torneo === "AP" ? "Apertura" : "Clausura"}: ${z.pj > 0 ? `${z.puesto}.º de 15 tras ${z.pj} fecha${z.pj === 1 ? "" : "s"}` : "todavía sin partidos"}</p>`;
+  }
 
   const datosClub = obtenerDatosReales(p.equipo);
   const stat = (n, v) => `<div class="stat"><b>${v}</b><span style="font-size:12px">${n}</span></div>`;
@@ -84,6 +103,7 @@ export function pantallaCarrera(el) {
     <!-- PANEL: ESTADÍSTICAS DEL EQUIPO Y TABLA -->
     <div class="panel" style="margin-bottom:16px;">
       <h2>Estadísticas Colectivas</h2>
+      ${infoZona}
       <div style="display:flex; justify-content:space-between; text-align:center; margin-bottom:10px; background:#222; padding:10px; border-radius:8px;">
           <div><b style="font-size:18px;">${misPuntos}</b><br><span style="font-size:11px; opacity:0.7;">Puntos</span></div>
           <div><b style="font-size:18px; color:#4ade80;">${misPG}</b><br><span style="font-size:11px; opacity:0.7;">Victorias</span></div>
@@ -126,7 +146,7 @@ export function pantallaCarrera(el) {
   
   el.querySelector("#menu").onclick = () => ir("menu");
   el.querySelector("#cal").onclick = () => ir("calendario");
-  el.querySelector("#btn-tabla").onclick = () => mostrarTablaPosiciones(p.equipo, p.progreso.partidos, misPuntos, misPG, misPE, misPP, misGF, misGC);
+  el.querySelector("#btn-tabla").onclick = () => p.fixture ? mostrarTabla(p) : aviso("La tabla real está disponible solo en Liga Profesional por ahora.");
   
   // ==========================================
   // BOTÓN GUARDAR MEJORADO (Evita cuelgues)
@@ -144,7 +164,8 @@ export function pantallaCarrera(el) {
           const datosLimpios = JSON.parse(JSON.stringify({
               progreso: p.progreso,
               atributos: p.atributos,
-              calendario: p.calendario
+              calendario: p.calendario,
+              fixture: p.fixture
           }));
 
           if (estado.user && estado.user.uid && p.id) {
@@ -175,88 +196,10 @@ export function pantallaCarrera(el) {
 }
 
 // ==========================================
-// TABLA DE POSICIONES SIMULADA
-// ==========================================
-function mostrarTablaPosiciones(miEquipo, pj, pts, pg, pe, pp, gf, gc) {
-    const equiposLiga = ["Boca Juniors", "River Plate", "Racing Club", "Independiente", "San Lorenzo", "Estudiantes", "Talleres", "Huracán", "Vélez Sarsfield", "Rosario Central", "Newell's", "Argentinos Jrs", "Lanús", "Defensa y Justicia", "Belgrano", "Argentino de Quilmes", "Boca Unidos"];
-    
-    let setEquipos = new Set(equiposLiga);
-    setEquipos.add(miEquipo);
-    let tabla = [];
-
-    setEquipos.forEach(eq => {
-        if (eq === miEquipo) {
-            tabla.push({ nombre: eq, pts: pts, pj, pg, pe, pp, gf, gc, dif: gf - gc });
-        } else {
-            let nivel = calcularNivelEquipo(eq);
-            let ePts = 0, ePg = 0, ePe = 0, ePp = 0, eGf = 0, eGc = 0;
-            for(let i=0; i < pj; i++) {
-                let rand = Math.random() * 100;
-                if (rand < nivel - 30) { ePts += 3; ePg++; eGf += Math.floor(Math.random()*3)+1; eGc += Math.floor(Math.random()*2); }
-                else if (rand < nivel) { ePts += 1; ePe++; eGf += 1; eGc += 1; }
-                else { ePp++; eGf += Math.floor(Math.random()*2); eGc += Math.floor(Math.random()*3)+1; }
-            }
-            tabla.push({ nombre: eq, pts: ePts, pj, pg: ePg, pe: ePe, pp: ePp, gf: eGf, gc: eGc, dif: eGf - eGc });
-        }
-    });
-
-    tabla.sort((a, b) => b.pts - a.pts || b.dif - a.dif || b.gf - a.gf);
-
-    const modal = document.createElement("div");
-    modal.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); color:white; z-index:9999; display:flex; flex-direction:column; padding:20px; overflow-y:auto; box-sizing:border-box; font-family:sans-serif;";
-    
-    let htmlFilas = tabla.map((t, index) => {
-        let isMe = t.nombre === miEquipo ? "background:#3b82f6; font-weight:bold;" : (index % 2 === 0 ? "background:#222;" : "background:#1a1a1a;");
-        return `<tr style="${isMe} text-align:center;">
-            <td style="padding:8px;">${index + 1}</td>
-            <td style="text-align:left; padding:8px;">${t.nombre}</td>
-            <td><b>${t.pts}</b></td>
-            <td>${t.pj}</td>
-            <td>${t.pg}</td>
-            <td>${t.pe}</td>
-            <td>${t.pp}</td>
-            <td>${t.dif}</td>
-        </tr>`;
-    }).join("");
-
-    modal.innerHTML = `
-        <div style="background:#111; padding:20px; border-radius:12px; max-width:600px; width:100%; margin:auto; border:1px solid #444;">
-            <h2 style="text-align:center; margin-top:0;">Tabla de Posiciones</h2>
-            <div style="overflow-x:auto;">
-                <table style="width:100%; border-collapse: collapse; font-size: 14px;">
-                    <thead style="background:#333; color:#aaa;">
-                        <tr>
-                            <th style="padding:10px;">Pos</th>
-                            <th style="text-align:left; padding:10px;">Equipo</th>
-                            <th>Pts</th>
-                            <th>PJ</th>
-                            <th>G</th>
-                            <th>E</th>
-                            <th>P</th>
-                            <th>DIF</th>
-                        </tr>
-                    </thead>
-                    <tbody>${htmlFilas}</tbody>
-                </table>
-            </div>
-            <button id="btn-cerrar-tabla" style="width:100%; padding:12px; margin-top:20px; background:#f87171; color:#000; font-weight:bold; border:none; border-radius:8px; cursor:pointer;">Cerrar Tabla</button>
-        </div>
-    `;
-    document.body.appendChild(modal);
-    modal.querySelector("#btn-cerrar-tabla").onclick = () => document.body.removeChild(modal);
-}
-
-// ==========================================
-// SISTEMA DE NIVELES
+// SISTEMA DE NIVELES (usa la misma fuerza que la tabla de la liga, en data/fuerza.js)
 // ==========================================
 function calcularNivelEquipo(nombre) {
-    if (!nombre) return 65;
-    const nombreLow = nombre.toLowerCase();
-    const grandes = ["boca", "river", "racing", "independiente", "san lorenzo", "estudiantes", "talleres", "velez"];
-    let base = grandes.some(g => nombreLow.includes(g)) ? 82 : 65;
-    let hash = 0;
-    for (let i = 0; i < nombre.length; i++) hash = nombre.charCodeAt(i) + ((hash << 5) - hash);
-    return base + (Math.abs(hash) % 15); 
+    return 40 + (fuerzaDe(nombre) - 50) * 2;
 }
 
 // ==========================================
@@ -362,6 +305,7 @@ function procesarEvolucion(partido, stats, p) {
         p.progreso.overall = calcularOverall(p.posicion, p.atributos);
     }
     partido.jugado = true;
+    if (partido.torneo && p.fixture) registrarFecha(p, partido);   // simula el resto de la fecha y actualiza la tabla
     
     estado.partida = p; // Mantiene los datos al ir al menú localmente
     
@@ -370,7 +314,8 @@ function procesarEvolucion(partido, stats, p) {
         const datosLimpios = JSON.parse(JSON.stringify({
             progreso: p.progreso,
             atributos: p.atributos,
-            calendario: p.calendario
+            calendario: p.calendario,
+            fixture: p.fixture
         }));
         actualizarPartida(estado.user.uid, p.id, datosLimpios).catch(e => console.warn("Error en autoguardado de fondo."));
     }
