@@ -1,7 +1,6 @@
 // Motor de simulación de partidos: minuto a minuto, con eventos, estadísticas y nota del jugador.
-import { fuerzaEquipo, APELLIDOS, INICIALES } from "./data/fuerzas.js";
+import { fuerzaEquipo, nivelPlantel, APELLIDOS, INICIALES } from "./data/fuerza.js";
 import { generarLesion, probTitular } from "./evolucion.js";
-import { nivelPlantel } from "./data/fuerzas.js";
 
 const az = (a, b) => a + Math.random() * (b - a);
 const ent = (a, b) => Math.floor(az(a, b + 1));

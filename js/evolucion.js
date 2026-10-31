@@ -1,9 +1,10 @@
 // Evolución del jugador: entrenamiento, lesiones, contratos, transferencias y paso de temporada.
-import { fuerzaEquipo, nivelPlantel } from "./data/fuerzas.js";
+import { fuerzaEquipo, nivelPlantel } from "./data/fuerza.js";
 import { PRIMERA, NACIONAL, LIGAS } from "./data/equipos.js";
 import { COMPETICIONES } from "./data/competiciones.js";
 import { generarAtributos, calcularOverall } from "./atributos.js";
 import { generarCalendario } from "./fixture.js";
+import { crearLiga } from "./liga.js";
 
 const ent = (a, b) => Math.floor(Math.random() * (b - a + 1)) + a;
 const lim = (n, a, b) => Math.max(a, Math.min(b, n));
@@ -64,6 +65,13 @@ export function completarPartida(p) {
   let c = false; const j = p.jugador;
   const set = (k, v) => { if (p[k] === undefined) { p[k] = typeof v === "function" ? v() : v; c = true; } };
   if (!p.atributos) { p.atributos = generarAtributos(p.posicion, j, p.liga); c = true; }
+  if (p.liga === "AR1" && p.fixture === undefined) {
+    // Partida vieja de Primera: se arma la liga real (zonas y fixture de los 30 equipos).
+    const lg = crearLiga(p.equipo);
+    if (lg) { p.zona = lg.zona; p.equiposLiga = lg.equipos; p.fixture = lg.fixture; p.calendario = lg.calendario; p.progreso.partidos = 0; p.progreso.goles = 0; p.progreso.asistencias = 0; }
+    else p.fixture = null;
+    c = true;
+  }
   if (!p.calendario) { p.calendario = generarCalendario(p.equipo, p.liga); c = true; }
   const ovr = calcularOverall(p.posicion, p.atributos);
   if (p.progreso.overall !== ovr) { p.progreso.overall = ovr; c = true; }
@@ -192,14 +200,20 @@ export function iniciarFin(p) {
   p.contrato.anios = Math.max(0, p.contrato.anios - 1);
   const ascenso = p.liga === "AR2" && pos["Primera Nacional"] > 0 && pos["Primera Nacional"] <= 2;
   const ap = pos["Torneo Apertura"], cl = pos["Torneo Clausura"];
-  const descenso = p.liga === "AR1" && ap && cl && (ap + cl) / 2 >= 14;
+  const descenso = p.liga === "AR1" && (pos.Anual ? pos.Anual >= 29 : (ap && cl && (ap + cl) / 2 >= 14));
   return { paso: 0, evo, ofertas: generarOfertas(p, p.contrato.anios === 0), ascenso, descenso, fichado: false };
+}
+// Primera: liga real (zonas + fixture) si el club está entre los 30 de la liga; si no, calendario simple.
+function armarCalendario(p) {
+  const lg = p.liga === "AR1" ? crearLiga(p.equipo) : null;
+  if (lg) { p.zona = lg.zona; p.equiposLiga = lg.equipos; p.fixture = lg.fixture; p.calendario = lg.calendario; }
+  else { p.zona = null; p.equiposLiga = null; p.fixture = null; p.calendario = generarCalendario(p.equipo, p.liga); }
 }
 export function comenzarTemporada(p) {
   if (p.fin.ascenso) cambiarLiga(p, "AR1");
   if (p.fin.descenso) cambiarLiga(p, "AR2");
   p.temporada++; p.temp = nuevaTemp(); p.tablas = {};
-  p.calendario = generarCalendario(p.equipo, p.liga);
+  armarCalendario(p);
   p.fatiga = Math.round(p.fatiga * .3); p.forma = 60;
   if (p.lesion) { p.lesion.restantes -= 3; if (p.lesion.restantes <= 0) p.lesion = null; }
   p.renov = null; p.fin = null;

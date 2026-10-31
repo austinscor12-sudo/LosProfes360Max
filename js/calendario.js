@@ -8,10 +8,11 @@ function textoJugado(m, equipo) {
   if (!r || typeof r !== "object") return esc(String(r || "Jugado"));
   const loc = r.local ?? 0, vis = r.visitante ?? 0;
   const nota = m.statsJugador?.nota;
-  const marcador = m.local === true
+  const marcador = m.local !== false
     ? `${esc(equipo)} <b>${loc} - ${vis}</b> ${esc(m.rival)}`
     : `${esc(m.rival)} <b>${loc} - ${vis}</b> ${esc(equipo)}`;
-  return `${marcador}${nota != null ? ` · Nota ${nota.toFixed(1)}` : ""}`;
+  const pen = m.penales ? ` (pen. ${m.penales.mi}-${m.penales.riv})` : "";
+  return `${marcador}${pen}${nota != null ? ` · Nota ${nota.toFixed(1)}` : ""}`;
 }
 
 export function pantallaCalendario(el) {

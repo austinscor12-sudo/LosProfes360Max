@@ -2,12 +2,13 @@ import { ir, estado, aviso } from "./router.js";
 import { esc } from "./util.js";
 import { sede } from "./fixture.js";
 import { ETIQUETAS } from "./atributos.js";
-import { fuerzaEquipo } from "./data/fuerzas.js";
+import { fuerzaEquipo } from "./data/fuerza.js";
 import { simularPartido, decidirRol, fmtMin } from "./simulacion.js";
 import { aplicarResultado } from "./resultado.js";
 import { rolEstimado } from "./evolucion.js";
 import { temporadaTerminada } from "./fixture.js";
 import { guardarTodo } from "./firebase.js";
+import { abrirTabla } from "./tabla.js";
 
 const ICONOS = { info: "⏱️", gol: "⚽", golR: "⚽", tiro: "🎯", palo: "🥅", pase: "🅰️", corte: "🛡️", ataj: "🧤", penal: "⚠️", amarilla: "🟨", roja: "🟥", lesion: "🩹", cambio: "🔄", fin: "🏁" };
 const MENSAJE_ROL = {
@@ -74,7 +75,7 @@ function reproducir(el, m, res, ap) {
     el.querySelector("#resumen").innerHTML = resumen(p, m, res, ap);
     const r = el.querySelector("#resumen");
     r.querySelector("#sig").onclick = () => ir(temporadaTerminada(p.calendario) ? "fin" : "carrera");
-    r.querySelector("#tab").onclick = () => ir("tabla");
+    r.querySelector("#tab").onclick = () => abrirTabla(p);
     r.querySelector("#ges").onclick = () => ir("gestion");
     window.scrollTo(0, 0);
   };
