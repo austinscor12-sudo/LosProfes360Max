@@ -9,10 +9,12 @@ const ent = (a, b) => Math.floor(Math.random() * (b - a + 1)) + a;
 const pick = a => a[Math.floor(Math.random() * a.length)];
 const NIVELES = [[0, "Desconocido"], [10000, "Promesa"], [50000, "Conocido"], [250000, "Figura"], [1000000, "Estrella"], [5000000, "Ídolo"]];
 const HITOS = [10000, 50000, 100000, 250000, 500000, 1000000, 2500000, 5000000];
-const MEDIOS = ["Diario Deportivo", "Radio Fútbol", "Mesa de Análisis", "El Club del Fútbol"];
+const MEDIOS = ["ESPN", "TyC Sports", "Olé", "Fox Sports", "TNT Sports"];
+const lim = (n, a, b) => Math.max(a, Math.min(b, n));
+const ICONO_OP = { prensa: "🎙️", hinchada: "👥", familia: "👪" };
 export const nivelFama = s => { let i = 0; NIVELES.forEach(([m], k) => { if (s >= m) i = k; }); return { nombre: NIVELES[i][1], min: NIVELES[i][0], sig: NIVELES[i + 1]?.[0] || null }; };
 export const fmt = n => n >= 1e6 ? (n / 1e6).toFixed(1).replace(".", ",") + " M" : n >= 1e4 ? Math.round(n / 1000) + " K" : n.toLocaleString("es-AR");
-export const nuevoCelular = p => { const s = Math.round(800 * Math.pow(1.12, Math.max(0, p.progreso.overall - 40))); return { seguidores: s, sem: 0, publicado: -1, equipo: p.equipo, hito: 0, msgs: [], noticias: [], posts: [], hist: [s] }; };
+export const nuevoCelular = p => { const s = Math.round(800 * Math.pow(1.12, Math.max(0, p.progreso.overall - 40))); return { seguidores: s, sem: 0, publicado: -1, equipo: p.equipo, hito: 0, prensa: 50, msgs: [], noticias: [], posts: [], ops: [], hist: [s] }; };
 export const noLeidos = p => (p.celular?.msgs || []).filter(m => !m.leido).length;
 const cel = p => p.celular || (p.celular = nuevoCelular(p));
 
@@ -52,8 +54,28 @@ export function generarCelular(p, m, res, out) {
     nota(pick([`${A} golea y se ilusiona con pelear arriba`, `Crisis en ${A}: el DT, en la cuerda floja`, `${A} refuerza el plantel con un delantero de 22 años`, `Polémica en ${A}: los hinchas piden cambios`, `${A} y ${B} se miden en un clásico caliente`, `Los periodistas debaten: ¿es ${A} candidato este año?`, `Mercado de pases: ${B} sigue de cerca a figuras de la liga`]), "liga");
   }
 
+  // Opiniones de periodistas, hinchas y familia
+  if (!c.ops) { c.ops = []; c.prensa = 50; }
+  const prom = t.partidos ? t.notaSuma / t.partidos : 6.2;
+  const bien = jugo && (j.goles > 0 || j.figura || j.nota >= 7.5), mal = (jugo && j.nota < 5.5) || j.roja, tono = bien ? 1 : mal ? -1 : 0;
+  const op = (tipo, fuente, txt, tn = tono) => c.ops.unshift({ tipo, fuente, txt, tono: tn, sem: c.sem });
+  const prensa = pick(MEDIOS), hincha = pick(["@lahinchada", "@el_tribunero", "@pasion_del_tablon", "@bombo_y_trapo", "@socio_de_toda_la_vida"]);
+  if (azar(.85)) {
+    if (!jugo) op("prensa", prensa, `${ap} sigue esperando su oportunidad: ¿por qué no juega?`, 0);
+    else if (bien) op("prensa", prensa, pick([`Hoy el mejor de ${p.equipo} fue ${ap}, sin discusión`, `Cada vez que la toca ${ap}, se le ilumina el juego a ${p.equipo}`, `${ap} está en un gran momento y empieza a hacer ruido`]));
+    else if (mal) op("prensa", prensa, pick([`${ap} no estuvo a la altura y el equipo lo sintió`, `Preocupa el nivel de ${ap}: ¿convendrá darle un descanso?`, `Tarde para el olvido de ${ap} frente a ${rival}`]));
+    else op("prensa", prensa, pick([`Partido discreto de ${ap}, sin pena ni gloria`, `${ap} cumplió, pero el equipo necesita más de él`]), 0);
+  }
+  if (t.partidos >= 5 && azar(.2)) op("prensa", pick(MEDIOS), prom >= 7 ? `${ap} es, por ahora, uno de los jugadores de la temporada` : prom < 6 ? `${ap} lleva varios partidos por debajo de lo esperado` : `${ap} alterna buenas y malas: ¿le falta regularidad?`, prom >= 7 ? 1 : prom < 6 ? -1 : 0);
+  if (nivelFama(c.seguidores).min >= 250000 && azar(.2)) op("prensa", pick(MEDIOS), `El debate de la mesa: ¿${ap} ya es de los mejores de la liga?`, 1);
+  if (p.jugador.edad <= 21 && bien && azar(.4)) op("prensa", pick(MEDIOS), `La joya que todos quieren: ${ap} ilusiona a ${p.equipo}`, 1);
+  if (azar(.9)) op("hinchada", hincha, bien ? pick([`¡Que no se vaya nunca ${ap}! 👏`, `Este pibe es el futuro del club`, `${ap} hoy jugó un partidazo 🔥`]) : mal ? pick([`${ap} está para el banco, no da más`, `Cada partido peor, ${ap} no me convence`, `Hay que bancarlo, el hincha está en las buenas y en las malas`]) : gano ? "Ganamos y es lo que importa 🙌" : perdio ? "Muy flojo el equipo hoy, qué bronca" : "Un puntito y a seguir");
+  if (azar(.6)) op("familia", pick(["Papá", "Hermano", "Abuela", "Mamá"]), bien ? pick([`Hoy te vi en la tele y me emocioné 🥹`, `Sos un crack, ya le conté a todo el barrio que sos mi familia 😎`, `¡Qué orgullo, ${p.jugador.nombre}!`]) : mal ? pick([`Un mal día lo tiene cualquiera. Mañana será otro.`, `No les hagas caso a los que critican. Seguí trabajando.`, `Comé bien y descansá, que ya vas a levantar.`]) : pick([`Lo vimos toda la familia. ¡Te queremos!`, `Cuidate mucho, ¿sí?`]));
+  c.prensa = lim(Math.round(c.prensa + tono * 4 + (50 - c.prensa) * .05), 0, 100);
+  c.ops.length = Math.min(c.ops.length, 60);
+
   // Fama: crecimiento de seguidores según tu rendimiento
-  let g = (jugo ? (j.nota - 6.3) * .6 : -.2) + j.goles * 1.2 + j.asist * .6 + (j.figura ? 2 : 0) + (gano ? .4 : perdio ? -.2 : 0) + (titulo ? 15 : 0) + (j.roja ? -1 : 0);
+  let g = (jugo ? (j.nota - 6.3) * .6 : -.2) + j.goles * 1.2 + j.asist * .6 + (j.figura ? 2 : 0) + (gano ? .4 : perdio ? -.2 : 0) + (titulo ? 15 : 0) + (j.roja ? -1 : 0) + ((c.prensa ?? 50) - 50) * .02;
   if (c.equipo !== p.equipo) { g += 12; msg("Representante", "💼", `Nuevo club, nuevos desafíos: ${p.equipo}. Tus seguidores están creciendo.`); nota(`${ap} ya es jugador de ${p.equipo}`); c.equipo = p.equipo; }
   c.seguidores = Math.max(200, Math.round(c.seguidores * (1 + g / 100)) + ent(0, 30));
   while (c.hito < HITOS.length && c.seguidores >= HITOS[c.hito]) { msg("Representante", "💼", `¡Pasaste los ${fmt(HITOS[c.hito])} de seguidores! Las marcas empiezan a mirarte.`); c.hito++; }
@@ -90,6 +112,11 @@ export function pantallaCelular(el) {
   const item = (t, s, d) => `<div class="item"><div><b>${t}</b><br><small class="sub">${s}</small></div><span class="sub">${d}</span></div>`;
   const msgs = () => c.msgs.length ? c.msgs.map(m => item(`${m.icono} ${esc(m.de)}${m.leido ? "" : " 🔵"}`, esc(m.txt), "Sem " + m.sem)).join("") : `<p class="sub">Todavía no tenés mensajes. Jugá partidos y vas a empezar a recibirlos.</p>`;
   const noticias = () => c.noticias.length ? c.noticias.map(n => item(esc(n.txt), `${esc(n.medio)}${n.tipo === "liga" ? " · Liga" : ""}`, "Sem " + n.sem)).join("") : `<p class="sub">Sin noticias por ahora.</p>`;
+  const ops = () => {
+    const pr = c.prensa ?? 50, lab = pr >= 65 ? "Elogiosa" : pr <= 35 ? "Crítica" : "Dividida";
+    return `<div class="panel" style="margin-bottom:12px"><h2>Imagen en la prensa: ${lab}</h2><div class="barra ${pr <= 35 ? "mala" : ""}"><i style="width:${pr}%"></i></div><small class="sub">Lo que se dice de vos también influye en cuánto crece tu fama.</small></div>`
+      + ((c.ops || []).length ? c.ops.map(o => item(`${ICONO_OP[o.tipo]} ${esc(o.fuente)} ${o.tono > 0 ? "👍" : o.tono < 0 ? "👎" : ""}`, esc(o.txt), "Sem " + o.sem)).join("") : `<p class="sub">Todavía nadie opina de vos. Jugá partidos y vas a empezar a escuchar a la prensa, los hinchas y tu familia.</p>`);
+  };
   const insta = () => {
     const nf = nivelFama(c.seguidores), mn = Math.min(...c.hist), mx = Math.max(...c.hist), prog = nf.sig ? Math.round((c.seguidores - nf.min) / (nf.sig - nf.min) * 100) : 100;
     const libre = c.publicado !== c.sem;
@@ -101,9 +128,9 @@ export function pantallaCelular(el) {
       ${c.posts.length ? c.posts.map(x => item(`${esc(x.de)}`, esc(x.txt), `❤️ ${fmt(x.likes)}`)).join("") : `<p class="sub">Todavía no hay publicaciones.</p>`}`;
   };
   const pintar = () => {
-    const html = tab === "msgs" ? msgs() : tab === "noticias" ? noticias() : insta();
+    const html = tab === "msgs" ? msgs() : tab === "noticias" ? noticias() : tab === "ops" ? ops() : insta();
     el.innerHTML = `<h2>📱 Celular</h2><p class="sub">${esc(p.jugador.nombre)} ${esc(p.jugador.apellido)} · ${esc(p.equipo)}</p>
-      <div class="tabs"><button class="tab" data-t="msgs">💬 Mensajes</button><button class="tab" data-t="noticias">📰 Noticias</button><button class="tab" data-t="insta">📷 Instagram</button></div>${html}
+      <div class="tabs"><button class="tab" data-t="msgs">💬 Mensajes</button><button class="tab" data-t="noticias">📰 Noticias</button><button class="tab" data-t="ops">🗣️ Opiniones</button><button class="tab" data-t="insta">📷 Instagram</button></div>${html}
       <div class="fila"><button class="btn" id="atras">Volver</button></div>`;
     if (tab === "msgs" && c.msgs.some(m => !m.leido)) { c.msgs.forEach(m => m.leido = true); guardar(); }
     el.querySelectorAll(".tab").forEach(t => t.classList.toggle("sel", t.dataset.t === tab));
