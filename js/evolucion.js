@@ -6,6 +6,7 @@ import { generarAtributos, calcularOverall } from "./atributos.js";
 import { generarCalendario } from "./fixture.js";
 import { crearLiga } from "./liga.js";
 import { efectos, nuevasFinanzas, cierreFinanzas } from "./finanzas.js";
+import { nuevoCelular } from "./celular.js";
 
 const ent = (a, b) => Math.floor(Math.random() * (b - a + 1)) + a;
 const lim = (n, a, b) => Math.max(a, Math.min(b, n));
@@ -84,7 +85,7 @@ export function completarPartida(p) {
   set("potencial", () => potencialInicial(ovr, j.edad));
   set("fatiga", 10); set("forma", 60); set("lesion", null); set("renov", null); set("fin", null);
   set("plan", () => ({ foco: FOCO_POR_POS[p.posicion] || Object.keys(p.atributos)[0], intensidad: "normal" }));
-  set("xp", {}); set("temp", nuevaTemp); set("tablas", {}); set("historial", []); set("palmares", []); set("traspasos", []); set("ahorros", 0); set("finanzas", nuevasFinanzas);
+  set("xp", {}); set("temp", nuevaTemp); set("tablas", {}); set("historial", []); set("palmares", []); set("traspasos", []); set("ahorros", 0); set("finanzas", nuevasFinanzas); set("celular", () => nuevoCelular(p));
   set("contrato", () => ({ anios: ent(2, 3), salario: salarioPara(valorMercado(ovr, j.edad, p.potencial)) }));
   return c;
 }
