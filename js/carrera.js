@@ -1,5 +1,5 @@
 import { ir, estado, aviso } from "./router.js";
-import { POSICIONES } from "./data/competiciones.js";
+import { POSICIONES, TEMPORADA_INICIAL } from "./data/competiciones.js";
 import { esc } from "./util.js";
 import { ETIQUETAS } from "./atributos.js";
 import { textoPartido, sede, temporadaTerminada } from "./fixture.js";
@@ -12,20 +12,20 @@ import { PRIMERA, NACIONAL } from "./data/equipos.js";
 // ==========================================
 // BASE DE DATOS: EQUIPOS (EDITÁ ESTO PARA TU 2026)
 // ==========================================
+// Los nombres tienen que coincidir EXACTO con los de data/equipos.js (antes se buscaba con "includes":
+// "independiente" también agarraba a Independiente Rivadavia, "racing" a Racing (Córdoba), etc.).
 const DATOS_EQUIPOS_2026 = {
-    "boca": { dt: "E. Cavani (DT)", figuras: "L. Brey, K. Zenón, I. Miramón" },
-    "river": { dt: "J. Pinola (DT)", figuras: "F. Mastantuono, S. Boselli" },
-    "racing": { dt: "Lisandro López (DT)", figuras: "M. Salas, B. Zuculini" },
-    "independiente": { dt: "C. Tevez", figuras: "S. López, M. Giménez" },
-    "san lorenzo": { dt: "L. Romagnoli", figuras: "E. Irala, G. Gómez" },
-    "estudiantes": { dt: "E. Pérez (DT)", figuras: "S. Ascacíbar, T. Palacios" },
+    "Boca Juniors": { dt: "E. Cavani (DT)", figuras: "L. Brey, K. Zenón, I. Miramón" },
+    "River Plate": { dt: "J. Pinola (DT)", figuras: "F. Mastantuono, S. Boselli" },
+    "Racing Club": { dt: "Lisandro López (DT)", figuras: "M. Salas, B. Zuculini" },
+    "Independiente": { dt: "C. Tevez", figuras: "S. López, M. Giménez" },
+    "San Lorenzo": { dt: "L. Romagnoli", figuras: "E. Irala, G. Gómez" },
+    "Estudiantes (LP)": { dt: "E. Pérez (DT)", figuras: "S. Ascacíbar, T. Palacios" },
     "default": { dt: "DT Interino", figuras: "Plantel profesional 2026" }
 };
 
 function obtenerDatosReales(nombreEquipo) {
-    if (!nombreEquipo) return DATOS_EQUIPOS_2026["default"];
-    const key = Object.keys(DATOS_EQUIPOS_2026).find(k => nombreEquipo.toLowerCase().includes(k));
-    return key ? DATOS_EQUIPOS_2026[key] : DATOS_EQUIPOS_2026["default"];
+    return DATOS_EQUIPOS_2026[nombreEquipo] || DATOS_EQUIPOS_2026["default"];
 }
 
 export function pantallaCarrera(el) {
@@ -55,7 +55,8 @@ export function pantallaCarrera(el) {
     infoZona = `<p class="sub" style="margin-bottom:10px">Zona ${p.zona} · ${z.torneo === "AP" ? "Apertura" : "Clausura"}: ${z.pj > 0 ? `${z.puesto}.º de 15 tras ${z.pj} fecha${z.pj === 1 ? "" : "s"}` : "todavía sin partidos"}</p>`;
   }
 
-  const datosClub = PRIMERA.includes(p.equipo) || NACIONAL.includes(p.equipo) ? obtenerDatosReales(p.equipo) : null;
+  // Es una foto de octubre de 2026: en las temporadas siguientes el DT y las figuras ya no coinciden, así que no se muestra.
+  const datosClub = p.temporada === TEMPORADA_INICIAL && (PRIMERA.includes(p.equipo) || NACIONAL.includes(p.equipo)) ? obtenerDatosReales(p.equipo) : null;
   const stat = (n, v) => `<div class="stat"><b>${v}</b><span style="font-size:12px">${n}</span></div>`;
   const nota = t.partidos ? (t.notaSuma / t.partidos).toFixed(1) : "-";
 
