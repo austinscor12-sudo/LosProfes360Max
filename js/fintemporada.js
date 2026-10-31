@@ -21,7 +21,7 @@ export function pantallaFin(el) {
     const titulos = p.palmares.filter(x => x.temporada === p.temporada);
     return `<h2>Temporada ${p.temporada} terminada</h2><p class="sub">${esc(p.equipo)}</p>
       <div class="stats"><div class="stat"><b>${t.partidos}</b><span>Partidos</span></div><div class="stat"><b>${t.goles}</b><span>Goles</span></div><div class="stat"><b>${t.asist}</b><span>Asistencias</span></div><div class="stat"><b>${nota}</b><span>Nota media</span></div></div>
-      <div class="panel">${dato("Titular en", `${t.titular} partidos`)}${dato("Minutos", t.minutos)}${dato("Figura del partido", `${t.figuras} veces`)}${dato("Tarjetas", `${t.amarillas} amarillas · ${t.rojas} rojas`)}${dato("Lesiones", t.lesiones)}
+      <div class="panel">${dato("Titular en", `${t.titular} partidos`)}${dato("Minutos", t.minutos)}${dato("Figura del partido", `${t.figuras} veces`)}${dato("Tarjetas", `${t.amarillas} amarillas · ${t.rojas} rojas`)}${dato("Lesiones", t.lesiones)}${f.finanzas?.renta ? dato("Renta del departamento", "+" + usd(f.finanzas.renta)) : ""}${f.finanzas?.rend ? dato("Fondo de inversión", `${f.finanzas.pct > 0 ? "+" : ""}${f.finanzas.pct}%`) : ""}
         ${Object.entries(t.pos).map(([c, pos]) => dato(esc(c), `${pos}° puesto`)).join("")}${t.copa ? dato("Copa Argentina", esc(t.copa)) : ""}
         ${esArgentino(p) && asegurar(p).temp.pj ? dato("🇦🇷 Selección", `${asegurar(p).temp.pj} partidos · ${asegurar(p).temp.goles} goles · ${asegurar(p).temp.asist} asist.`) : ""}
         ${titulos.map(x => `<p class="nota">🏆 Campeón: ${esc(x.titulo)}</p>`).join("")}</div>

@@ -5,6 +5,7 @@ import { COMPETICIONES } from "./data/competiciones.js";
 import { generarAtributos, calcularOverall } from "./atributos.js";
 import { generarCalendario } from "./fixture.js";
 import { crearLiga } from "./liga.js";
+import { efectos, nuevasFinanzas, cierreFinanzas } from "./finanzas.js";
 
 const ent = (a, b) => Math.floor(Math.random() * (b - a + 1)) + a;
 const lim = (n, a, b) => Math.max(a, Math.min(b, n));
@@ -83,7 +84,7 @@ export function completarPartida(p) {
   set("potencial", () => potencialInicial(ovr, j.edad));
   set("fatiga", 10); set("forma", 60); set("lesion", null); set("renov", null); set("fin", null);
   set("plan", () => ({ foco: FOCO_POR_POS[p.posicion] || Object.keys(p.atributos)[0], intensidad: "normal" }));
-  set("xp", {}); set("temp", nuevaTemp); set("tablas", {}); set("historial", []); set("palmares", []); set("traspasos", []); set("ahorros", 0);
+  set("xp", {}); set("temp", nuevaTemp); set("tablas", {}); set("historial", []); set("palmares", []); set("traspasos", []); set("ahorros", 0); set("finanzas", nuevasFinanzas);
   set("contrato", () => ({ anios: ent(2, 3), salario: salarioPara(valorMercado(ovr, j.edad, p.potencial)) }));
   return c;
 }
@@ -96,16 +97,16 @@ const edadF = e => e <= 20 ? 1.5 : e <= 23 ? 1.25 : e <= 26 ? 1 : e <= 29 ? .7 :
 export function entrenarSemana(p, jug) {
   const out = { mejoras: [], lesion: null, recuperado: null };
   const I = INTENSIDADES[p.lesion ? "suave" : p.plan.intensidad];
-  const edad = p.jugador.edad;
+  const edad = p.jugador.edad, E = efectos(p);
 
   // Lesión: cuenta un partido menos (salvo la semana en que te lesionaste).
   if (p.lesion) {
     if (p.lesion.nueva) delete p.lesion.nueva;
-    else if (--p.lesion.restantes <= 0) { out.recuperado = p.lesion; p.lesion = null; }
+    else if ((p.lesion.restantes -= 1 + (Math.random() < E.recup ? 1 : 0)) <= 0) { out.recuperado = p.lesion; p.lesion = null; }
   }
   // Fatiga y forma
-  p.fatiga = lim(Math.round((p.fatiga + (jug?.minutos || 0) / 90 * 14 + I.fatiga) * .75), 0, 100);
-  p.forma = Math.round(p.forma + (60 - p.forma) * .15);
+  p.fatiga = lim(Math.round((p.fatiga + (jug?.minutos || 0) / 90 * 14 + I.fatiga + E.fatiga) * .75), 0, 100);
+  p.forma = Math.round(p.forma + (E.formaBase - p.forma) * .15);
   p.ahorros = (p.ahorros || 0) + Math.round(p.contrato.salario * .4);
 
   // Experiencia de entrenamiento
@@ -114,7 +115,7 @@ export function entrenarSemana(p, jug) {
   const tope = Math.min(99, p.potencial + 12);
   const ganar = (k, n) => {
     if (!(k in p.atributos) || n <= 0) return;
-    p.xp[k] = (p.xp[k] || 0) + n;
+    p.xp[k] = (p.xp[k] || 0) + n * E.xp;
     while (p.xp[k] >= 100 && p.atributos[k] < tope) { p.xp[k] -= 100; p.atributos[k]++; out.mejoras.push({ k, a: p.atributos[k] }); }
     if (p.atributos[k] >= tope) p.xp[k] = Math.min(p.xp[k], 99);
   };
@@ -125,7 +126,7 @@ export function entrenarSemana(p, jug) {
   p.progreso.overall = calcularOverall(p.posicion, p.atributos);
 
   // Lesión en el entrenamiento
-  if (!p.lesion && Math.random() < I.riesgo * (1 + p.fatiga / 100)) { out.lesion = aplicarLesion(p, generarLesion(true)); }
+  if (!p.lesion && Math.random() < I.riesgo * E.riesgo * (1 + p.fatiga / 100)) { out.lesion = aplicarLesion(p, generarLesion(true)); }
   return out;
 }
 
@@ -221,7 +222,7 @@ export function obtenerRenov(p) {
   return p.renov;
 }
 export function pedirMas(p) {
-  if (Math.random() < .4) { p.renov = { estado: "retirada" }; return false; }
+  if (Math.random() < efectos(p).pedirMasFalla) { p.renov = { estado: "retirada" }; return false; }
   p.renov.salario = Math.round(p.renov.salario * 1.2 / 100) * 100; p.renov.pedidos++; return true;
 }
 export function firmarRenov(p) {
@@ -237,7 +238,7 @@ export function iniciarFin(p) {
   const ascenso = p.liga === "AR2" && pos["Primera Nacional"] > 0 && pos["Primera Nacional"] <= 2;
   const ap = pos["Torneo Apertura"], cl = pos["Torneo Clausura"];
   const descenso = p.liga === "AR1" && (pos.Anual ? pos.Anual >= 29 : (ap && cl && (ap + cl) / 2 >= 14));
-  return { paso: 0, evo, ofertas: generarOfertas(p, p.contrato.anios === 0), ascenso, descenso, fichado: false, forzado: evo.edad >= EDAD_RETIRO_FORZADO };
+  return { paso: 0, evo, finanzas: cierreFinanzas(p), ofertas: generarOfertas(p, p.contrato.anios === 0), ascenso, descenso, fichado: false, forzado: evo.edad >= EDAD_RETIRO_FORZADO };
 }
 // Primera: liga real (zonas + fixture) si el club está entre los 30 de la liga; si no, calendario simple.
 function armarCalendario(p) {
