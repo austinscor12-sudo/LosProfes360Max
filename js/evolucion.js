@@ -7,6 +7,7 @@ import { generarCalendario } from "./fixture.js";
 import { crearLiga } from "./liga.js";
 import { efectos, nuevasFinanzas, cierreFinanzas } from "./finanzas.js";
 import { nuevoCelular } from "./celular.js";
+import { nuevaVida } from "./vida.js";
 
 const ent = (a, b) => Math.floor(Math.random() * (b - a + 1)) + a;
 const lim = (n, a, b) => Math.max(a, Math.min(b, n));
@@ -62,7 +63,7 @@ export const potencialInicial = (ovr, edad) => {
 };
 export const rolSegun = d => d >= 8 ? "Figura del plantel" : d >= 3 ? "Titular indiscutido" : d >= -2 ? "Titular" : d >= -7 ? "Rotación" : d >= -12 ? "Suplente" : "Juvenil de proyección";
 export const rolEstimado = p => rolSegun(p.progreso.overall - nivelPlantel(p.equipo));
-export const probTitular = p => lim(.55 + (p.progreso.overall - nivelPlantel(p.equipo)) * .045 + ((p.forma ?? 60) - 60) * .003, .05, .97);
+export const probTitular = p => lim(.55 + (p.progreso.overall - nivelPlantel(p.equipo)) * .045 + ((p.forma ?? 60) - 60) * .003 + ((p.vida?.dt ?? 50) - 50) * .002, .05, .97);
 export const valorActual = p => valorMercado(p.progreso.overall, p.jugador.edad, p.potencial);
 
 export const nuevaTemp = () => ({ equipoPJ: 0, partidos: 0, titular: 0, minutos: 0, goles: 0, asist: 0, notaSuma: 0, amarillas: 0, rojas: 0, figuras: 0, lesiones: 0, pos: {}, copa: "" });
@@ -85,7 +86,7 @@ export function completarPartida(p) {
   set("potencial", () => potencialInicial(ovr, j.edad));
   set("fatiga", 10); set("forma", 60); set("lesion", null); set("renov", null); set("fin", null);
   set("plan", () => ({ foco: FOCO_POR_POS[p.posicion] || Object.keys(p.atributos)[0], intensidad: "normal" }));
-  set("xp", {}); set("temp", nuevaTemp); set("tablas", {}); set("historial", []); set("palmares", []); set("traspasos", []); set("ahorros", 0); set("finanzas", nuevasFinanzas); set("celular", () => nuevoCelular(p));
+  set("xp", {}); set("temp", nuevaTemp); set("tablas", {}); set("historial", []); set("palmares", []); set("traspasos", []); set("ahorros", 0); set("finanzas", nuevasFinanzas); set("celular", () => nuevoCelular(p)); set("vida", nuevaVida);
   set("contrato", () => ({ anios: ent(2, 3), salario: salarioPara(valorMercado(ovr, j.edad, p.potencial)) }));
   return c;
 }

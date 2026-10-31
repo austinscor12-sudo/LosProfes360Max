@@ -5,6 +5,7 @@ import { ETIQUETAS } from "./atributos.js";
 import { textoPartido, sede, temporadaTerminada } from "./fixture.js";
 import { completarPartida, rolEstimado, usd } from "./evolucion.js";
 import { noLeidos } from "./celular.js";
+import { vidaPendiente } from "./vida.js";
 import { puestoEnZona } from "./liga.js";
 import { abrirTabla } from "./tabla.js";
 import { guardarTodo } from "./firebase.js";
@@ -127,12 +128,13 @@ export function pantallaCarrera(el) {
       ${conv ? `<button class="btn main" id="seljugar">🇦🇷 Jugar con la Selección</button>` : fin ? `<button class="btn main" id="fin">Cerrar temporada</button>` : `<button class="btn main" id="jugar">Jugar próximo partido</button>`}
       <button class="btn" id="ges">Entrenamiento y contrato</button>
       <button class="btn" id="cel">📱 Celular${noLeidos(p) ? ` (${noLeidos(p)})` : ""}</button>
+      <button class="btn" id="vida">🏠 Vida personal${vidaPendiente(p) ? ` (${vidaPendiente(p)})` : ""}</button>
       <button class="btn" id="btn-guardar" style="background-color: #3b82f6; color: white; border: none;">Guardar Partida</button>
       <button class="btn" id="menu">Menú</button>
     </div>`;
 
   const on = (id, fn) => { const b = el.querySelector(id); if (b) b.onclick = fn; };
-  on("#menu", () => ir("menu")); on("#cal", () => ir("calendario")); on("#ges", () => ir("gestion")); on("#cel", () => ir("celular"));
+  on("#menu", () => ir("menu")); on("#cal", () => ir("calendario")); on("#ges", () => ir("gestion")); on("#cel", () => ir("celular")); on("#vida", () => ir("vida"));
   on("#btn-tabla", () => abrirTabla(p));
   on("#jugar", () => ir("partido")); on("#fin", () => ir("fin"));
   on("#seljugar", () => ir("seleccion")); on("#selinfo", () => ir("selinfo"));

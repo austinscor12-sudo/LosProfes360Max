@@ -14,8 +14,9 @@ import { pantallaTabla } from "./tabla.js";
 import { pantallaFin } from "./fintemporada.js";
 import { pantallaRetiro } from "./retiro.js";
 import { pantallaCelular } from "./celular.js";
+import { pantallaVida } from "./vida.js";
 import { pantallaSeleccion, pantallaSelInfo } from "./pantallaseleccion.js";
 
-Object.assign(rutas, { auth: pantallaAuth, menu: pantallaMenu, jugador: pantallaJugador, posicion: pantallaPosicion, equipo: pantallaEquipo, cargar: pantallaCargar, carrera: pantallaCarrera, calendario: pantallaCalendario, partido: pantallaPartido, gestion: pantallaGestion, tabla: pantallaTabla, fin: pantallaFin, retiro: pantallaRetiro, celular: pantallaCelular, seleccion: pantallaSeleccion, selinfo: pantallaSelInfo });
+Object.assign(rutas, { auth: pantallaAuth, menu: pantallaMenu, jugador: pantallaJugador, posicion: pantallaPosicion, equipo: pantallaEquipo, cargar: pantallaCargar, carrera: pantallaCarrera, calendario: pantallaCalendario, partido: pantallaPartido, gestion: pantallaGestion, tabla: pantallaTabla, fin: pantallaFin, retiro: pantallaRetiro, celular: pantallaCelular, vida: pantallaVida, seleccion: pantallaSeleccion, selinfo: pantallaSelInfo });
 
 onUser(u => { estado.user = u; ir(u ? "menu" : "auth"); });

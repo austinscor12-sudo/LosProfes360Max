@@ -55,7 +55,7 @@ export function efectos(p) {
   const f = asegurarFin(p), m = f.mejoras;
   return {
     fatiga: -1.5 * m.nutri - (tiene(p, "casa") ? 1 : 0),   // se suma a la fatiga semanal
-    formaBase: 60 + 4 * m.psico,                            // nivel al que tiende la forma
+    formaBase: 60 + 4 * m.psico + ((p.vida?.felicidad ?? 60) - 60) * .1 + ((p.vida?.vestuario ?? 60) - 60) * .05 - (p.vida?.pareja === "modelo" ? 3 : 0),                            // nivel al que tiende la forma
     xp: 1 + .1 * m.coach,                                   // multiplicador de experiencia
     riesgo: 1 - .15 * m.fisio,                              // multiplicador del riesgo de lesión
     recup: .2 * m.fisio,                                    // chance semanal de recuperar un partido extra
