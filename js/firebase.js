@@ -30,3 +30,9 @@ export async function listarPartidas(uid) {
   return s.docs.map(d => ({ id: d.id, ...d.data() }));
 }
 export const actualizarPartida = (uid, id, data) => updateDoc(doc(db, "users", uid, "partidas", id), data);
+
+// Guarda toda la partida (sin id ni fecha de creación). El JSON elimina valores undefined, que Firestore rechaza.
+export function guardarTodo(uid, p) {
+  const { id, creada, ...datos } = p;
+  return updateDoc(doc(db, "users", uid, "partidas", id), JSON.parse(JSON.stringify(datos)));
+}

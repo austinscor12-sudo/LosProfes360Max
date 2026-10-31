@@ -42,3 +42,15 @@ export function generarCalendario(equipo, ligaId) {
 
 export const textoPartido = (m, equipo) => m.local === false ? `${m.rival} vs ${equipo}` : `${equipo} vs ${m.rival}`;
 export const sede = m => m.local === null ? "Cancha neutral" : m.local ? "Local" : "Visitante";
+
+// Copa Argentina: al ganar, se agrega la siguiente ronda unos partidos más adelante.
+export function siguienteCopa(cal, m, equipo) {
+  const r = RONDAS_COPA.indexOf(m.etiqueta);
+  if (r < 0 || r >= RONDAS_COPA.length - 1) return null;
+  const usados = cal.filter(x => x.comp === "Copa Argentina").map(x => x.rival);
+  const pool = [...PRIMERA, ...NACIONAL].filter(n => n !== equipo && !usados.includes(n));
+  const sig = { id: `CA-${r + 2}`, comp: "Copa Argentina", etiqueta: RONDAS_COPA[r + 1], rival: pool[Math.floor(Math.random() * pool.length)], local: null, jugado: false };
+  cal.splice(Math.min(cal.length, cal.indexOf(m) + 5), 0, sig);
+  return sig;
+}
+export const temporadaTerminada = cal => cal.every(m => m.jugado);

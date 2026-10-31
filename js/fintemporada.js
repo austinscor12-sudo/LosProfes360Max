@@ -1,0 +1,64 @@
+import { ir, estado, aviso } from "./router.js";
+import { esc } from "./util.js";
+import { ETIQUETAS } from "./atributos.js";
+import { usd, iniciarFin, obtenerRenov, pedirMas, firmarRenov, fichar, comenzarTemporada } from "./evolucion.js";
+import { guardarTodo } from "./firebase.js";
+
+const dato = (l, v) => `<div class="dato"><span>${l}</span><b>${v}</b></div>`;
+
+export function pantallaFin(el) {
+  const p = estado.partida;
+  const guardar = () => guardarTodo(estado.user.uid, p).catch(e => aviso("No se pudo guardar: " + (e.code || e.message)));
+  // Se genera una sola vez y queda guardado: si cerrás y volvés, ves lo mismo.
+  if (!p.fin) { p.fin = iniciarFin(p); guardar(); }
+  const f = p.fin;
+  const ir_paso = n => { f.paso = n; guardar(); pintar(); };
+
+  const resumen = () => {
+    const t = p.temp, nota = t.partidos ? (t.notaSuma / t.partidos).toFixed(2) : "-";
+    const titulos = p.palmares.filter(x => x.temporada === p.temporada);
+    return `<h2>Temporada ${p.temporada} terminada</h2><p class="sub">${esc(p.equipo)}</p>
+      <div class="stats"><div class="stat"><b>${t.partidos}</b><span>Partidos</span></div><div class="stat"><b>${t.goles}</b><span>Goles</span></div><div class="stat"><b>${t.asist}</b><span>Asistencias</span></div><div class="stat"><b>${nota}</b><span>Nota media</span></div></div>
+      <div class="panel">${dato("Titular en", `${t.titular} partidos`)}${dato("Minutos", t.minutos)}${dato("Figura del partido", `${t.figuras} veces`)}${dato("Tarjetas", `${t.amarillas} amarillas · ${t.rojas} rojas`)}${dato("Lesiones", t.lesiones)}
+        ${Object.entries(t.pos).map(([c, pos]) => dato(esc(c), `${pos}° puesto`)).join("")}${t.copa ? dato("Copa Argentina", esc(t.copa)) : ""}
+        ${titulos.map(x => `<p class="nota">🏆 Campeón: ${esc(x.titulo)}</p>`).join("")}</div>
+      <div class="fila"><button class="btn main" id="sig">Continuar</button></div>`;
+  };
+  const evolucion = () => `<h2>Evolución</h2><p class="sub">Cumplís ${f.evo.edad} años.</p>
+    <div class="stats"><div class="stat"><b>${f.evo.antes}</b><span>Valoración anterior</span></div><div class="stat"><b>${f.evo.despues}</b><span>Valoración nueva</span></div><div class="stat"><b>${p.potencial}</b><span>Potencial</span></div></div>
+    <div class="panel"><h2>Cambios de atributos</h2>${f.evo.cambios.length ? f.evo.cambios.map(c => `<div class="dato"><span>${ETIQUETAS[c.k]}</span><b class="${c.a > c.de ? "sube" : "baja"}">${c.de} → ${c.a}</b></div>`).join("") : `<p class="sub">Sin cambios este año.</p>`}</div>
+    <div class="fila"><button class="btn main" id="sig">Continuar</button></div>`;
+
+  const mercado = () => {
+    const vence = p.contrato.anios === 0, o = vence ? obtenerRenov(p) : null;
+    const listo = p.contrato.anios > 0;
+    return `<h2>Contrato y mercado de pases</h2>
+      ${f.ascenso ? `<p class="nota">⬆️ ¡${esc(p.equipo)} ascendió a Primera!</p>` : ""}${f.descenso ? `<p class="nota">⬇️ ${esc(p.equipo)} descendió a la Primera Nacional.</p>` : ""}
+      <div class="panel" style="margin-bottom:16px">${dato("Club actual", esc(p.equipo))}${dato("Contrato", vence ? "Vencido" : `${p.contrato.anios} año${p.contrato.anios === 1 ? "" : "s"} · ${usd(p.contrato.salario)}/mes`)}
+        ${vence && o.estado === "abierta" ? `<p style="margin-top:10px"><b>${esc(p.equipo)}</b> te ofrece renovar ${o.anios} años por <b>${usd(o.salario)}</b> al mes.</p>
+          <div class="fila"><button class="btn main" data-r="ok">Renovar</button><button class="btn" data-r="mas">Pedir más (+20%, riesgo)</button></div>` : ""}
+        ${vence && o.estado !== "abierta" ? `<p class="nota">${o.estado === "retirada" ? "El club retiró la oferta." : "El club no te ofrece renovación."} Quedás libre: elegí una oferta.</p>` : ""}</div>
+      ${f.fichado ? "" : `<div class="panel"><h2>Ofertas recibidas</h2>${f.ofertas.length ? f.ofertas.map((x, i) => `<div class="item"><div><b>${esc(x.equipo)}</b><br><small class="sub">${x.liga === "AR1" ? "Primera" : "Primera Nacional"} · Rol: ${x.rol}<br>${x.anios} años · ${usd(x.salario)}/mes · ${x.monto ? "Pase: " + usd(x.monto) : "Pase libre"}</small></div><button class="btn" data-o="${i}">Aceptar</button></div>`).join("") : `<p class="sub">No llegaron ofertas este año.</p>`}</div>`}
+      ${listo ? `<div class="fila"><button class="btn main" id="sig">${f.fichado ? "Seguir" : `Quedarme en ${esc(p.equipo)}`}</button></div>` : ""}`;
+  };
+  const nueva = () => `<h2>Temporada ${p.temporada + 1}</h2><p class="sub">${esc(p.equipo)} · ${esc(p.ligaNombre)}${f.ascenso ? " (ascenso)" : f.descenso ? " (descenso)" : ""}</p>
+    <div class="panel">${dato("Edad", p.jugador.edad)}${dato("Valoración", p.progreso.overall)}${dato("Contrato", `${p.contrato.anios} año${p.contrato.anios === 1 ? "" : "s"} · ${usd(p.contrato.salario)}/mes`)}</div>
+    <p class="sub" style="margin-top:12px">Vas a arrancar descansado, con un calendario nuevo.</p>
+    <div class="fila"><button class="btn main" id="go">Comenzar temporada</button></div>`;
+
+  const pintar = () => {
+    el.innerHTML = [resumen, evolucion, mercado, nueva][f.paso]();
+    const sig = el.querySelector("#sig"); if (sig) sig.onclick = () => ir_paso(f.paso + 1);
+    const go = el.querySelector("#go");
+    if (go) go.onclick = () => { go.disabled = true; comenzarTemporada(p); guardar(); aviso("¡Nueva temporada!"); ir("carrera"); };
+    el.querySelectorAll("[data-r]").forEach(b => b.onclick = () => {
+      if (b.dataset.r === "ok") { firmarRenov(p); aviso("Contrato renovado"); } else aviso(pedirMas(p) ? "El club mejoró la oferta" : "El club retiró la oferta");
+      guardar(); pintar();
+    });
+    el.querySelectorAll("[data-o]").forEach(b => b.onclick = () => {
+      const o = f.ofertas[Number(b.dataset.o)];
+      if (confirm(`¿Fichar por ${o.equipo}?`)) { fichar(p, o); aviso("¡Nuevo club!"); guardar(); pintar(); }
+    });
+  };
+  pintar();
+}
