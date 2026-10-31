@@ -1,6 +1,6 @@
 // Evolución del jugador: entrenamiento, lesiones, contratos, transferencias y paso de temporada.
 import { fuerzaEquipo, nivelPlantel } from "./data/fuerza.js";
-import { PRIMERA, NACIONAL, LIGAS } from "./data/equipos.js";
+import { LIGAS } from "./data/equipos.js";
 import { COMPETICIONES } from "./data/competiciones.js";
 import { generarAtributos, calcularOverall } from "./atributos.js";
 import { generarCalendario } from "./fixture.js";
@@ -128,7 +128,7 @@ function cambioAnual(e, fis) {
   if (e <= 23) return ent(0, 2);
   if (e <= 27) return fis ? ent(0, 1) : ent(0, 2);
   if (e <= 30) return fis ? ent(-2, 0) : ent(-1, 1);
-  if (e <= 33) return fis ? ent(-3, -1) : ent(-2, 0);
+  if (e <= 37) return fis ? ent(-3, -1) : ent(-2, 0);
   return fis ? ent(-4, -2) : ent(-3, -1);
 }
 export function evolucionAnual(p) {
@@ -143,12 +143,22 @@ export function evolucionAnual(p) {
   }
   p.progreso.overall = calcularOverall(p.posicion, p.atributos);
   p.potencial = j.edad >= 27 ? p.progreso.overall : Math.max(p.progreso.overall, p.potencial + ent(-2, 2));
+  p.pico = Math.max(p.pico || 0, antes, p.progreso.overall);
   return { edad: j.edad, antes, despues: p.progreso.overall, cambios };
 }
 
 /* ---------- Ofertas, renovación y fichajes ---------- */
-const TODOS = [...PRIMERA, ...NACIONAL];
-const ligaDe = n => PRIMERA.includes(n) ? "AR1" : "AR2";
+const ligaDe = n => LIGAS.find(l => l.equipos.includes(n))?.id;
+const esEuropa = id => LIGAS.find(l => l.id === id)?.europa === true;
+const CLUBES_AR = LIGAS.filter(l => !l.europa).flatMap(l => l.equipos);
+const CLUBES_EU = LIGAS.filter(l => l.europa).flatMap(l => l.equipos);
+
+// Retiro: desde los 34 podés decidirlo vos; a los 42 el cuerpo dice basta (la última temporada se juega con 41).
+export const EDAD_RETIRO_VOLUNTARIO = 34;
+export const EDAD_RETIRO_FORZADO = 42;
+export function retirar(p, motivo) {
+  p.retirado = { temporada: p.temporada, edad: p.jugador.edad - 1, equipo: p.equipo, motivo };
+}
 
 export function generarOfertas(p, libre) {
   const ovr = p.progreso.overall, t = p.temp, val = valorActual(p);
@@ -156,11 +166,25 @@ export function generarOfertas(p, libre) {
   const interes = (ovr - nivelPlantel(p.equipo)) * .6 + (nota - 6.2) * 5 + Math.max(0, p.potencial - ovr) * .25 + (t.goles + t.asist) * .1;
   let n = lim(Math.round(interes / 3 + Math.random() * 1.7 - .4), 0, 4);
   if (libre) n = Math.max(n, 2);
-  let pool = TODOS.filter(x => x !== p.equipo && nivelPlantel(x) <= ovr + 4 && nivelPlantel(x) >= ovr - 14);
-  if (pool.length < n) pool = TODOS.filter(x => x !== p.equipo).sort((a, b) => Math.abs(nivelPlantel(a) - ovr + 4) - Math.abs(nivelPlantel(b) - ovr + 4)).slice(0, 8);
-  return mezclar(pool).slice(0, n).map(club => ({
+  // Clubes argentinos: como siempre. Clubes europeos: solo se fijan en jugadores muy buenos (valoración 68+) y, salvo que seas un crack, llega como mucho una oferta europea por año.
+  let poolAR = CLUBES_AR.filter(x => x !== p.equipo && nivelPlantel(x) <= ovr + 4 && nivelPlantel(x) >= ovr - 14);
+  // Si ya jugás en Europa seguís en ese mercado (con el mismo criterio que en Argentina); si venís de afuera, hace falta ser muy bueno.
+  const enEuropa = esEuropa(p.liga);
+  const poolEU = !enEuropa && ovr < 68 ? [] : CLUBES_EU.filter(x => x !== p.equipo && nivelPlantel(x) <= ovr + (enEuropa ? 4 : 1) && nivelPlantel(x) >= ovr - (enEuropa ? 14 : 9));
+  if (poolAR.length + poolEU.length < n) poolAR = CLUBES_AR.filter(x => x !== p.equipo).sort((a, b) => Math.abs(nivelPlantel(a) - ovr + 4) - Math.abs(nivelPlantel(b) - ovr + 4)).slice(0, 8);
+  // Chance de que cada oferta sea europea: sube con tu valoración y tu nota media de la temporada.
+  const edadF = p.jugador.edad <= 28 ? 1 : p.jugador.edad <= 32 ? .6 : .25;   // a los europeos les interesan más los jóvenes
+  const pEU = enEuropa ? .7 : poolEU.length ? lim((.03 + (ovr - 68) * .03 + (nota - 6.5) * .25) * edadF, .02, .7) : 0;
+  const A = mezclar(poolAR), E = mezclar(poolEU), elegidos = [];
+  let europeas = 0;
+  while (elegidos.length < n && (A.length || E.length)) {
+    const deEU = E.length && (enEuropa || europeas < (ovr >= 74 ? 2 : 1)) && (!A.length || Math.random() < pEU);
+    if (deEU) europeas++;
+    elegidos.push(deEU ? E.pop() : A.pop() ?? E.pop());
+  }
+  return elegidos.map(club => ({
     equipo: club, liga: ligaDe(club), rol: rolSegun(ovr - nivelPlantel(club)), anios: ent(2, 4),
-    salario: Math.round(salarioPara(val) * (.9 + Math.random() * .5) * (fuerzaEquipo(club) / 66) * (libre ? 1.1 : 1) / 100) * 100,
+    salario: Math.round(salarioPara(val) * (.9 + Math.random() * .5) * (fuerzaEquipo(club) / 66) * (esEuropa(ligaDe(club)) ? 1.5 : 1) * (libre ? 1.1 : 1) / 100) * 100,
     monto: libre ? 0 : Math.round(val * (.8 + Math.random() * .6) / 1000) * 1000
   }));
 }
@@ -201,7 +225,7 @@ export function iniciarFin(p) {
   const ascenso = p.liga === "AR2" && pos["Primera Nacional"] > 0 && pos["Primera Nacional"] <= 2;
   const ap = pos["Torneo Apertura"], cl = pos["Torneo Clausura"];
   const descenso = p.liga === "AR1" && (pos.Anual ? pos.Anual >= 29 : (ap && cl && (ap + cl) / 2 >= 14));
-  return { paso: 0, evo, ofertas: generarOfertas(p, p.contrato.anios === 0), ascenso, descenso, fichado: false };
+  return { paso: 0, evo, ofertas: generarOfertas(p, p.contrato.anios === 0), ascenso, descenso, fichado: false, forzado: evo.edad >= EDAD_RETIRO_FORZADO };
 }
 // Primera: liga real (zonas + fixture) si el club está entre los 30 de la liga; si no, calendario simple.
 function armarCalendario(p) {

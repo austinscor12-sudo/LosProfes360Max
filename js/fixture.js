@@ -1,4 +1,4 @@
-import { PRIMERA, NACIONAL } from "./data/equipos.js";
+import { PRIMERA, NACIONAL, LIGAS } from "./data/equipos.js";
 
 export const RONDAS_COPA = ["32avos de final", "16avos de final", "Octavos de final", "Cuartos de final", "Semifinal", "Final"];
 
@@ -19,6 +19,14 @@ const revancha = (lista) => mezclar(lista).map(x => ({ rival: x.rival, local: !x
 export function generarCalendario(equipo, ligaId) {
   const inicio = Math.random() < 0.5;
   const alternar = rivales => rivales.map((rival, i) => ({ rival, local: (i % 2 === 0) === inicio }));
+
+  // Ligas europeas: todos contra todos, ida y vuelta (sin copa por ahora).
+  const europea = LIGAS.find(l => l.id === ligaId && l.europa);
+  if (europea) {
+    const rivales = mezclar(europea.equipos.filter(n => n !== equipo));
+    const ida = alternar(rivales);
+    return numerar(europea.comp, europea.id, [...ida, ...revancha(ida)]);
+  }
 
   // Copa Argentina: eliminación directa en cancha neutral. Solo se sortea el rival de la primera ronda.
   const pool = [...PRIMERA, ...NACIONAL].filter(n => n !== equipo);

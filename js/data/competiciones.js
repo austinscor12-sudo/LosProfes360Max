@@ -1,6 +1,11 @@
 export const COMPETICIONES = {
   AR1:["Torneo Apertura","Torneo Clausura","Copa Argentina","Trofeo de Campeones","Supercopa Argentina","Copa Libertadores (clasificación)","Copa Sudamericana (clasificación)"],
-  AR2:["Primera Nacional (Zona + Reducido)","Copa Argentina"]
+  AR2:["Primera Nacional (Zona + Reducido)","Copa Argentina"],
+  EN1:["Premier League"],
+  ES1:["LaLiga"],
+  IT1:["Serie A"],
+  DE1:["Bundesliga"],
+  FR1:["Ligue 1"]
 };
 export const NACIONALIDADES = ["Argentina","Uruguay","Paraguay","Chile","Bolivia","Brasil","Colombia","Ecuador","Perú","Venezuela","México","Estados Unidos","España","Italia","Francia","Alemania","Portugal","Inglaterra","Países Bajos","Otra"];
 export const POSICIONES = [

@@ -7,6 +7,7 @@ import { completarPartida, rolEstimado, usd } from "./evolucion.js";
 import { puestoEnZona } from "./liga.js";
 import { abrirTabla } from "./tabla.js";
 import { guardarTodo } from "./firebase.js";
+import { PRIMERA, NACIONAL } from "./data/equipos.js";
 
 // ==========================================
 // BASE DE DATOS: EQUIPOS (EDITÁ ESTO PARA TU 2026)
@@ -29,6 +30,7 @@ function obtenerDatosReales(nombreEquipo) {
 
 export function pantallaCarrera(el) {
   const p = estado.partida;
+  if (p.retirado) return ir("retiro");   // carrera terminada: se ve el resumen del retiro
   // Completa las partidas viejas a las que les falta algo (atributos, liga real, calendario, contrato, etc.).
   if (completarPartida(p) && estado.user?.uid && p.id) guardarTodo(estado.user.uid, p).catch(() => {});
   const j = p.jugador, pr = p.progreso, t = p.temp, les = p.lesion;
@@ -53,7 +55,7 @@ export function pantallaCarrera(el) {
     infoZona = `<p class="sub" style="margin-bottom:10px">Zona ${p.zona} · ${z.torneo === "AP" ? "Apertura" : "Clausura"}: ${z.pj > 0 ? `${z.puesto}.º de 15 tras ${z.pj} fecha${z.pj === 1 ? "" : "s"}` : "todavía sin partidos"}</p>`;
   }
 
-  const datosClub = obtenerDatosReales(p.equipo);
+  const datosClub = PRIMERA.includes(p.equipo) || NACIONAL.includes(p.equipo) ? obtenerDatosReales(p.equipo) : null;
   const stat = (n, v) => `<div class="stat"><b>${v}</b><span style="font-size:12px">${n}</span></div>`;
   const nota = t.partidos ? (t.notaSuma / t.partidos).toFixed(1) : "-";
 
@@ -70,11 +72,11 @@ export function pantallaCarrera(el) {
       <div class="stats" style="margin:12px 0 0">${stat("Partidos", t.partidos)}${stat("Goles", t.goles)}${stat("Asistencias", t.asist)}${stat("Nota media", nota)}</div>
       ${t.copa ? `<p class="sub" style="margin:10px 0 0">Copa Argentina: ${esc(t.copa)}</p>` : ""}</div>
 
-    <div class="panel" style="margin-bottom:16px; background:#1a1a2e; border: 1px solid #333;">
+    ${datosClub ? `<div class="panel" style="margin-bottom:16px; background:#1a1a2e; border: 1px solid #333;">
       <h2 style="color:#4ade80;">Actualidad del Club (Oct 2026)</h2>
       <p style="margin:5px 0; font-size:14px;">📋 <b>DT Actual:</b> ${datosClub.dt}</p>
       <p style="margin:5px 0; font-size:14px;">⭐ <b>Figuras:</b> ${datosClub.figuras}</p>
-    </div>
+    </div>` : ""}
 
     <div class="panel" style="margin-bottom:16px;">
       <h2>Estadísticas Colectivas</h2>

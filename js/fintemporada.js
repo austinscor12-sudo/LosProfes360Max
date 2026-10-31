@@ -1,7 +1,8 @@
 import { ir, estado, aviso } from "./router.js";
 import { esc } from "./util.js";
 import { ETIQUETAS } from "./atributos.js";
-import { usd, iniciarFin, obtenerRenov, pedirMas, firmarRenov, fichar, comenzarTemporada } from "./evolucion.js";
+import { usd, iniciarFin, obtenerRenov, pedirMas, firmarRenov, fichar, comenzarTemporada, retirar, EDAD_RETIRO_VOLUNTARIO } from "./evolucion.js";
+import { LIGAS } from "./data/equipos.js";
 import { guardarTodo } from "./firebase.js";
 
 const dato = (l, v) => `<div class="dato"><span>${l}</span><b>${v}</b></div>`;
@@ -38,16 +39,23 @@ export function pantallaFin(el) {
         ${vence && o.estado === "abierta" ? `<p style="margin-top:10px"><b>${esc(p.equipo)}</b> te ofrece renovar ${o.anios} años por <b>${usd(o.salario)}</b> al mes.</p>
           <div class="fila"><button class="btn main" data-r="ok">Renovar</button><button class="btn" data-r="mas">Pedir más (+20%, riesgo)</button></div>` : ""}
         ${vence && o.estado !== "abierta" ? `<p class="nota">${o.estado === "retirada" ? "El club retiró la oferta." : "El club no te ofrece renovación."} Quedás libre: elegí una oferta.</p>` : ""}</div>
-      ${f.fichado ? "" : `<div class="panel"><h2>Ofertas recibidas</h2>${f.ofertas.length ? f.ofertas.map((x, i) => `<div class="item"><div><b>${esc(x.equipo)}</b><br><small class="sub">${x.liga === "AR1" ? "Primera" : "Primera Nacional"} · Rol: ${x.rol}<br>${x.anios} años · ${usd(x.salario)}/mes · ${x.monto ? "Pase: " + usd(x.monto) : "Pase libre"}</small></div><button class="btn" data-o="${i}">Aceptar</button></div>`).join("") : `<p class="sub">No llegaron ofertas este año.</p>`}</div>`}
-      ${listo ? `<div class="fila"><button class="btn main" id="sig">${f.fichado ? "Seguir" : `Quedarme en ${esc(p.equipo)}`}</button></div>` : ""}`;
+      ${f.fichado ? "" : `<div class="panel"><h2>Ofertas recibidas</h2>${f.ofertas.length ? f.ofertas.map((x, i) => `<div class="item"><div><b>${esc(x.equipo)}</b><br><small class="sub">${esc(LIGAS.find(l => l.id === x.liga)?.nombre || "")} · Rol: ${x.rol}<br>${x.anios} años · ${usd(x.salario)}/mes · ${x.monto ? "Pase: " + usd(x.monto) : "Pase libre"}</small></div><button class="btn" data-o="${i}">Aceptar</button></div>`).join("") : `<p class="sub">No llegaron ofertas este año.</p>`}</div>`}
+      ${listo ? `<div class="fila"><button class="btn main" id="sig">${f.fichado ? "Seguir" : `Quedarme en ${esc(p.equipo)}`}</button></div>` : ""}
+      ${p.jugador.edad >= EDAD_RETIRO_VOLUNTARIO ? `<div class="fila"><button class="btn" id="retiro">Retirarme del fútbol</button></div>` : ""}`;
   };
+  const retiroForzado = () => `<h2>Llegó la hora</h2><p class="sub">${esc(p.jugador.nombre)} ${esc(p.jugador.apellido)} · ${esc(p.equipo)}</p>
+    <div class="panel"><p>Tras ${p.historial.length} temporada${p.historial.length === 1 ? "" : "s"} como profesional, el cuerpo ya no responde como antes. A los ${p.jugador.edad - 1} años jugaste tu última temporada: es momento de colgar los botines.</p></div>
+    <div class="fila"><button class="btn main" id="colgar">Colgar los botines</button></div>`;
   const nueva = () => `<h2>Temporada ${p.temporada + 1}</h2><p class="sub">${esc(p.equipo)} · ${esc(p.ligaNombre)}${f.ascenso ? " (ascenso)" : f.descenso ? " (descenso)" : ""}</p>
     <div class="panel">${dato("Edad", p.jugador.edad)}${dato("Valoración", p.progreso.overall)}${dato("Contrato", `${p.contrato.anios} año${p.contrato.anios === 1 ? "" : "s"} · ${usd(p.contrato.salario)}/mes`)}</div>
     <p class="sub" style="margin-top:12px">Vas a arrancar descansado, con un calendario nuevo.</p>
     <div class="fila"><button class="btn main" id="go">Comenzar temporada</button></div>`;
 
   const pintar = () => {
-    el.innerHTML = [resumen, evolucion, mercado, nueva][f.paso]();
+    el.innerHTML = (f.forzado && f.paso >= 2 ? retiroForzado : [resumen, evolucion, mercado, nueva][f.paso])();
+    const retirarse = motivo => { retirar(p, motivo); guardar(); ir("retiro"); };
+    const colgar = el.querySelector("#colgar"); if (colgar) colgar.onclick = () => { colgar.disabled = true; retirarse("edad"); };
+    const ret = el.querySelector("#retiro"); if (ret) ret.onclick = () => { if (confirm("¿Seguro que querés retirarte? Tu carrera termina acá.")) retirarse("voluntario"); };
     const sig = el.querySelector("#sig"); if (sig) sig.onclick = () => ir_paso(f.paso + 1);
     const go = el.querySelector("#go");
     if (go) go.onclick = () => { go.disabled = true; comenzarTemporada(p); guardar(); aviso("¡Nueva temporada!"); ir("carrera"); };
