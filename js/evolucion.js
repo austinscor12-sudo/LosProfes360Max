@@ -52,7 +52,12 @@ export function valorMercado(ovr, edad, pot) {
   return Math.max(5000, Math.round(25000 * Math.pow(1.19, ovr - 50) * f * extra / 1000) * 1000);
 }
 export const salarioPara = v => Math.max(1500, Math.round(v * .012 / 100) * 100);
-export const potencialInicial = (ovr, edad) => Math.min(92, ovr + Math.max(2, Math.round((27 - edad) * 1.8 + ent(0, 8))));
+// Talento oculto: la mayoría es del montón, algunos tienen techo alto y muy pocos son generacionales (tipo Messi / Cristiano).
+export const potencialInicial = (ovr, edad) => {
+  const r = Math.random();
+  const talento = r < .70 ? ent(0, 4) : r < .93 ? ent(5, 11) : ent(14, 26);
+  return Math.min(97, ovr + Math.max(2, Math.round((27 - edad) * 1.8 + ent(0, 8) + talento)));
+};
 export const rolSegun = d => d >= 8 ? "Figura del plantel" : d >= 3 ? "Titular indiscutido" : d >= -2 ? "Titular" : d >= -7 ? "Rotación" : d >= -12 ? "Suplente" : "Juvenil de proyección";
 export const rolEstimado = p => rolSegun(p.progreso.overall - nivelPlantel(p.equipo));
 export const probTitular = p => lim(.55 + (p.progreso.overall - nivelPlantel(p.equipo)) * .045 + ((p.forma ?? 60) - 60) * .003, .05, .97);
@@ -84,6 +89,7 @@ export function completarPartida(p) {
 }
 
 /* ---------- Entrenamiento semanal ---------- */
+const PASIVO = .05;   // fracción de la XP del foco que reciben, de forma pasiva, los demás atributos
 const edadF = e => e <= 20 ? 1.5 : e <= 23 ? 1.25 : e <= 26 ? 1 : e <= 29 ? .7 : e <= 32 ? .4 : .2;
 
 // Se llama una vez por partido de tu equipo (una "semana"). jug = estadísticas del partido o null si no jugaste.
@@ -104,7 +110,7 @@ export function entrenarSemana(p, jug) {
 
   // Experiencia de entrenamiento
   const gap = p.potencial - p.progreso.overall;
-  const gf = gap <= 0 ? .4 : Math.min(1.5, .6 + gap / 12);
+  const gf = gap <= 0 ? .4 : Math.min(4.5, .4 + gap / 10);   // cuanta más distancia a tu potencial, más rápido crecés (los talentosos vuelan)
   const tope = Math.min(99, p.potencial + 12);
   const ganar = (k, n) => {
     if (!(k in p.atributos) || n <= 0) return;
@@ -114,6 +120,7 @@ export function entrenarSemana(p, jug) {
   };
   ganar(p.plan.foco, I.xp * edadF(edad) * gf);
   if (I.xp) ganar(pick(Object.keys(p.atributos).filter(k => k !== p.plan.foco)), I.xp * edadF(edad) * gf * .3);
+  if (I.xp) for (const k of Object.keys(p.atributos)) if (k !== p.plan.foco) ganar(k, I.xp * edadF(edad) * gf * PASIVO);
   if (jug?.nota) ganar(FOCO_POR_POS[p.posicion], Math.max(0, jug.nota - 6) * 4 * edadF(edad));
   p.progreso.overall = calcularOverall(p.posicion, p.atributos);
 
@@ -127,22 +134,27 @@ function cambioAnual(e, fis) {
   if (e <= 20) return ent(1, 3);
   if (e <= 23) return ent(0, 2);
   if (e <= 27) return fis ? ent(0, 1) : ent(0, 2);
-  if (e <= 30) return fis ? ent(-2, 0) : ent(-1, 1);
-  if (e <= 37) return fis ? ent(-3, -1) : ent(-2, 0);
-  return fis ? ent(-4, -2) : ent(-3, -1);
+  if (e <= 30) return fis ? ent(-1, 0) : ent(-1, 1);
+  if (e <= 33) return fis ? ent(-2, 0) : ent(-1, 0);
+  if (e <= 36) return fis ? ent(-2, -1) : ent(-1, 0);
+  if (e <= 39) return fis ? ent(-3, -1) : ent(-2, 0);
+  return fis ? ent(-3, -2) : ent(-2, -1);
 }
 export function evolucionAnual(p) {
   const j = p.jugador; j.edad++;
-  const e = p.posicion === "ARQ" ? j.edad - 3 : j.edad;
+  const e = p.posicion === "ARQ" ? j.edad - 1 : j.edad;
   const antes = p.progreso.overall, cambios = [];
   for (const k in p.atributos) {
     let d = cambioAnual(e, FISICOS.includes(k));
     if (d > 0 && antes >= p.potencial) d = Math.round(d / 2);
-    const de = p.atributos[k]; p.atributos[k] = lim(de + d, 25, 95);
+    else if (d > 0 && e <= 25 && p.potencial - antes >= 12) d++;   // joven con mucho margen: se desarrolla más parejo
+    const de = p.atributos[k]; p.atributos[k] = lim(de + d, 25, 99);
     if (p.atributos[k] !== de) cambios.push({ k, de, a: p.atributos[k] });
   }
   p.progreso.overall = calcularOverall(p.posicion, p.atributos);
-  p.potencial = j.edad >= 27 ? p.progreso.overall : Math.max(p.progreso.overall, p.potencial + ent(-2, 2));
+  const nota = p.temp?.partidos ? p.temp.notaSuma / p.temp.partidos : 6.2;
+  const bono = nota >= 7.2 ? 1 : nota < 6 ? -1 : 0;   // rendir bien sube tu techo; rendir mal lo baja
+  p.potencial = j.edad >= 27 ? p.progreso.overall : Math.min(97, Math.max(p.progreso.overall, p.potencial + ent(-2, 2) + bono));
   p.pico = Math.max(p.pico || 0, antes, p.progreso.overall);
   return { edad: j.edad, antes, despues: p.progreso.overall, cambios };
 }
