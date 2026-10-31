@@ -28,7 +28,7 @@ const resultado = g => {
   if (u < g + .50) return "afuera"; if (u < g + .59) return "bloq"; return "nada";
 };
 
-export function simularPartido({ equipo, rival, local, p, rol, copa }) {
+export function simularPartido({ equipo, rival, local, p, rol, copa, copaNombre }) {
   const j = p.jugador, A = p.atributos, pos = p.posicion;
   const yo = j.apodo || j.apellido;
   const fat = p.fatiga || 0, forma = p.forma ?? 60;
@@ -192,7 +192,7 @@ export function simularPartido({ equipo, rival, local, p, rol, copa }) {
   /* ---- Penales (Copa Argentina) ---- */
   let penales = null;
   if (copa && gM === gR) {
-    push(93, "info", `Empate ${gM}-${gR}: la Copa Argentina se define por penales.`);
+    push(93, "info", `Empate ${gM}-${gR}: ${copaNombre || "la Copa Argentina"} se define por penales.`);
     const yoToma = juega && fin >= 90 && pos !== "ARQ" && prob(.55), turno = yoToma ? ent(1, 5) : 0;
     const yoAtajo = juega && fin >= 90 && pos === "ARQ";
     let a = 0, b = 0;

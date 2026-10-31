@@ -3,6 +3,7 @@ import { siguienteCopa } from "./fixture.js";
 import { actualizarTabla, posicionEn } from "./simulacion.js";
 import { aplicarLesion, entrenarSemana } from "./evolucion.js";
 import { registrarFecha, calcularTabla } from "./liga.js";
+import { chequearVentana } from "./seleccion.js";
 
 const lim = (n, a, b) => Math.max(a, Math.min(b, n));
 
@@ -59,5 +60,6 @@ export function aplicarResultado(p, m, res) {
     if (m.etiqueta === "Final") { t.copa = "Campeón"; p.palmares.push({ temporada: p.temporada, titulo: "Copa Argentina" }); out.copa = "¡Campeón de la Copa Argentina!"; }
     else { const s = siguienteCopa(p.calendario, m, p.equipo); t.copa = `Clasificado a ${s.etiqueta}`; out.copa = `Pasaste a ${s.etiqueta} de la Copa Argentina.`; }
   } else { t.copa = `Eliminado en ${m.etiqueta}`; out.copa = `Eliminados de la Copa Argentina en ${m.etiqueta}.`; }
+  out.seleccion = chequearVentana(p) || [];   // ¿llegó una fecha FIFA? Scaloni da la lista
   return out;
 }

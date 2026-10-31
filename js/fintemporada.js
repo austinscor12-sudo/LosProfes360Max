@@ -4,6 +4,7 @@ import { ETIQUETAS } from "./atributos.js";
 import { usd, iniciarFin, obtenerRenov, pedirMas, firmarRenov, fichar, comenzarTemporada, retirar, EDAD_RETIRO_VOLUNTARIO } from "./evolucion.js";
 import { LIGAS } from "./data/equipos.js";
 import { guardarTodo } from "./firebase.js";
+import { esArgentino, asegurar } from "./seleccion.js";
 
 const dato = (l, v) => `<div class="dato"><span>${l}</span><b>${v}</b></div>`;
 
@@ -22,6 +23,7 @@ export function pantallaFin(el) {
       <div class="stats"><div class="stat"><b>${t.partidos}</b><span>Partidos</span></div><div class="stat"><b>${t.goles}</b><span>Goles</span></div><div class="stat"><b>${t.asist}</b><span>Asistencias</span></div><div class="stat"><b>${nota}</b><span>Nota media</span></div></div>
       <div class="panel">${dato("Titular en", `${t.titular} partidos`)}${dato("Minutos", t.minutos)}${dato("Figura del partido", `${t.figuras} veces`)}${dato("Tarjetas", `${t.amarillas} amarillas · ${t.rojas} rojas`)}${dato("Lesiones", t.lesiones)}
         ${Object.entries(t.pos).map(([c, pos]) => dato(esc(c), `${pos}° puesto`)).join("")}${t.copa ? dato("Copa Argentina", esc(t.copa)) : ""}
+        ${esArgentino(p) && asegurar(p).temp.pj ? dato("🇦🇷 Selección", `${asegurar(p).temp.pj} partidos · ${asegurar(p).temp.goles} goles · ${asegurar(p).temp.asist} asist.`) : ""}
         ${titulos.map(x => `<p class="nota">🏆 Campeón: ${esc(x.titulo)}</p>`).join("")}</div>
       <div class="fila"><button class="btn main" id="sig">Continuar</button></div>`;
   };

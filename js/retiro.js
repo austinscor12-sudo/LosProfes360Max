@@ -3,6 +3,7 @@ import { ir, estado } from "./router.js";
 import { esc } from "./util.js";
 import { POSICIONES } from "./data/competiciones.js";
 import { usd } from "./evolucion.js";
+import { esArgentino, asegurar } from "./seleccion.js";
 
 const dato = (l, v) => `<div class="dato"><span>${l}</span><b>${v}</b></div>`;
 
@@ -29,6 +30,7 @@ export function pantallaRetiro(el) {
       ${dato("Clubes", clubes.length ? clubes.map(esc).join(" · ") : esc(r.equipo))}
       ${dato("Transferencias", (p.traspasos || []).length)}${dato("Ahorros", usd(p.ahorros || 0))}
       ${mejor ? dato("Mejor temporada", `${mejor.temporada} (${mejor.goles} goles, ${mejor.asist} asist.)`) : ""}</div>
+    ${esArgentino(p) && asegurar(p).convocatorias ? `<div class="panel" style="margin-bottom:16px"><h2>🇦🇷 Selección Argentina</h2>${dato("Partidos", asegurar(p).partidos)}${dato("Goles", asegurar(p).goles)}${dato("Asistencias", asegurar(p).asist)}${dato("Títulos", asegurar(p).titulos)}${asegurar(p).debut ? dato("Debut", `${asegurar(p).debut.temporada} vs ${esc(asegurar(p).debut.rival)}`) : ""}</div>` : ""}
     <div class="panel" style="margin-bottom:16px"><h2>Palmarés</h2>${titulos.length ? titulos.map(x => `<div class="item"><b>🏆 ${esc(x.titulo)}</b><span>${x.temporada}</span></div>`).join("") : `<p class="sub">No ganaste títulos.</p>`}</div>
     <div class="panel"><h2>Temporadas</h2>${hist.map(h => `<div class="item"><b>${h.temporada} · ${esc(h.equipo)}</b><small class="sub">${h.partidos} PJ · ${h.goles} goles · ${h.asist} asist. · nota ${h.nota}</small></div>`).join("")}</div>
     <div class="fila"><button class="btn main" id="menu">Volver al menú</button></div>`;

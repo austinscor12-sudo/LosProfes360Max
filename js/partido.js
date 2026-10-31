@@ -9,6 +9,10 @@ import { rolEstimado } from "./evolucion.js";
 import { temporadaTerminada } from "./fixture.js";
 import { guardarTodo } from "./firebase.js";
 import { abrirTabla } from "./tabla.js";
+import { hayPendientes } from "./seleccion.js";
+
+// Después de un partido del club: si te convocaron, primero va la Selección; si no, cierre de temporada o seguir.
+const destino = p => hayPendientes(p) ? "carrera" : temporadaTerminada(p.calendario) ? "fin" : "carrera";
 
 const ICONOS = { info: "⏱️", gol: "⚽", golR: "⚽", tiro: "🎯", palo: "🥅", pase: "🅰️", corte: "🛡️", ataj: "🧤", penal: "⚠️", amarilla: "🟨", roja: "🟥", lesion: "🩹", cambio: "🔄", fin: "🏁" };
 const MENSAJE_ROL = {
@@ -52,11 +56,11 @@ export function pantallaPartido(el) {
 
 const fila = e => `<div class="ev ${e.yo ? "yo" : ""} t-${e.t}"><span class="min">${fmtMin(e.m)}</span><span class="ico">${ICONOS[e.t] || "•"}</span><p>${esc(e.x)}</p></div>`;
 
-function reproducir(el, m, res, ap) {
-  const p = estado.partida;
+export function reproducir(el, m, res, ap, ctx = {}) {
+  const p = estado.partida, eq = ctx.equipo || p.equipo;
   el.innerHTML = `
     <h2>${esc(m.comp)} · ${esc(m.etiqueta)}</h2><p class="sub">${sede(m)}</p>
-    <div class="marcador"><div class="eq">${esc(p.equipo)}</div><div class="res" id="res">0 - 0</div><div class="eq">${esc(m.rival)}</div></div>
+    <div class="marcador"><div class="eq">${esc(eq)}</div><div class="res" id="res">0 - 0</div><div class="eq">${esc(m.rival)}</div></div>
     <p class="minuto" id="min">Previa</p>
     <div id="resumen"></div>
     <div class="panel" id="feed"></div>
@@ -72,10 +76,10 @@ function reproducir(el, m, res, ap) {
     clearTimeout(timer);
     el.querySelector("#saltar").hidden = true;
     marc.textContent = `${res.golesMi} - ${res.golesRiv}`; min.textContent = res.penales ? `Final · penales ${res.penales.mi}-${res.penales.riv}` : "Final";
-    el.querySelector("#resumen").innerHTML = resumen(p, m, res, ap);
+    el.querySelector("#resumen").innerHTML = resumen(p, m, res, ap, ctx);
     const r = el.querySelector("#resumen");
-    r.querySelector("#sig").onclick = () => ir(temporadaTerminada(p.calendario) ? "fin" : "carrera");
-    r.querySelector("#tab").onclick = () => abrirTabla(p);
+    r.querySelector("#sig").onclick = () => ctx.siguiente ? ctx.siguiente() : ir(destino(p));
+    const tab = r.querySelector("#tab"); if (tab) tab.onclick = () => abrirTabla(p);
     r.querySelector("#ges").onclick = () => ir("gestion");
     window.scrollTo(0, 0);
   };
@@ -89,8 +93,8 @@ function reproducir(el, m, res, ap) {
   paso();
 }
 
-function resumen(p, m, res, ap) {
-  const j = res.jug, pos = p.posicion, arq = pos === "ARQ", gm = res.golesMi, gr = res.golesRiv, q = res.equipos;
+function resumen(p, m, res, ap, ctx = {}) {
+  const eq = ctx.equipo || p.equipo, j = res.jug, pos = p.posicion, arq = pos === "ARQ", gm = res.golesMi, gr = res.golesRiv, q = res.equipos;
   const jugador = j.minutos ? `
     <div class="panel" style="margin-bottom:16px"><h2>Tu actuación${j.figura ? " · ⭐ Figura del partido" : ""}</h2>
       <div class="stats" style="margin-top:12px">
@@ -110,17 +114,17 @@ function resumen(p, m, res, ap) {
     ...ap.mejoras.map(x => `📈 ${ETIQUETAS[x.k]} sube a ${x.a}`),
     ap.lesion ? `🩹 Lesión: ${ap.lesion.nombre} (${ap.lesion.gravedad}), baja ${ap.lesion.total} partidos.${ap.lesion.secuela ? ` Secuelas: ${ap.lesion.secuela}.` : ""}` : "",
     ap.lesionEntreno ? `🩹 Te lesionaste entrenando: ${ap.lesionEntreno.nombre}, baja ${ap.lesionEntreno.total} partidos.` : "",
-    ap.recuperado ? `✅ Te recuperaste de: ${ap.recuperado.nombre}.` : "", ap.copa, ...ap.cierres,
+    ap.recuperado ? `✅ Te recuperaste de: ${ap.recuperado.nombre}.` : "", ap.copa, ...ap.cierres, ...(ap.seleccion || []),
     ap.tabla ? `Posición en ${ap.tabla.comp}: ${ap.tabla.pos}° de ${ap.tabla.total} (${ap.tabla.pts} pts).` : ""
   ].filter(Boolean);
   return `
-    <div class="panel" style="margin-bottom:16px"><h2>${gm > gr ? "Victoria" : gm < gr ? "Derrota" : "Empate"} · ${esc(p.equipo)} ${gm}-${gr} ${esc(m.rival)}</h2>
+    <div class="panel" style="margin-bottom:16px"><h2>${gm > gr ? "Victoria" : gm < gr ? "Derrota" : "Empate"} · ${esc(eq)} ${gm}-${gr} ${esc(m.rival)}</h2>
       ${dato("Posesión", `${q.posesion}% - ${100 - q.posesion}%`)}${dato("Remates (al arco)", `${q.remM} (${q.arcoM}) - ${q.remR} (${q.arcoR})`)}</div>
     ${jugador}
     <div class="panel" style="margin-bottom:16px"><h2>Después del partido</h2>
       ${cambios.map(c => `<p class="nota">${esc(c)}</p>`).join("")}
       <div class="attr"><span>Fatiga</span>${barra(p.fatiga, p.fatiga > 60)}<b>${p.fatiga}</b></div>
       <div class="attr"><span>Forma</span>${barra(p.forma)}<b>${p.forma}</b></div></div>
-    <div class="fila"><button class="btn main" id="sig">${temporadaTerminada(p.calendario) ? "Cerrar temporada" : "Continuar"}</button><button class="btn" id="tab">Ver tabla</button><button class="btn" id="ges">Entrenamiento</button></div>
+    <div class="fila"><button class="btn main" id="sig">${!ctx.equipo && destino(p) === "fin" ? "Cerrar temporada" : "Continuar"}</button>${ctx.sinTabla ? "" : `<button class="btn" id="tab">Ver tabla</button>`}<button class="btn" id="ges">Entrenamiento</button></div>
     <h2 style="margin-top:28px">Minuto a minuto</h2>`;
 }

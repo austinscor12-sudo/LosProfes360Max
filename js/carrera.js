@@ -8,6 +8,8 @@ import { puestoEnZona } from "./liga.js";
 import { abrirTabla } from "./tabla.js";
 import { guardarTodo } from "./firebase.js";
 import { PRIMERA, NACIONAL } from "./data/equipos.js";
+import { esArgentino, hayPendientes } from "./seleccion.js";
+import { panelSeleccion } from "./pantallaseleccion.js";
 
 // ==========================================
 // BASE DE DATOS: EQUIPOS (EDITÁ ESTO PARA TU 2026)
@@ -39,6 +41,7 @@ export function pantallaCarrera(el) {
   const proximos = p.calendario.filter(m => m.jugado !== true).slice(0, 3);
   const jugados = p.calendario.filter(m => m.jugado === true).slice(-5).reverse();
   const fin = temporadaTerminada(p.calendario);
+  const conv = esArgentino(p) && hayPendientes(p);   // convocado a la Selección: se juega antes que el próximo partido del club
 
   // Estadísticas colectivas del equipo
   let misPuntos = 0, misPG = 0, misPE = 0, misPP = 0;
@@ -72,6 +75,8 @@ export function pantallaCarrera(el) {
     <div class="panel" style="margin-bottom:16px"><h2>Temporada ${p.temporada}</h2>
       <div class="stats" style="margin:12px 0 0">${stat("Partidos", t.partidos)}${stat("Goles", t.goles)}${stat("Asistencias", t.asist)}${stat("Nota media", nota)}</div>
       ${t.copa ? `<p class="sub" style="margin:10px 0 0">Copa Argentina: ${esc(t.copa)}</p>` : ""}</div>
+
+    ${esArgentino(p) ? panelSeleccion(p) : ""}
 
     ${datosClub ? `<div class="panel" style="margin-bottom:16px; background:#1a1a2e; border: 1px solid #333;">
       <h2 style="color:#4ade80;">Actualidad del Club (Oct 2026)</h2>
@@ -118,7 +123,7 @@ export function pantallaCarrera(el) {
     <div class="panel"><h2>Contrato</h2><p class="sub" style="margin:4px 0 0">${usd(p.contrato.salario)} por mes · ${p.contrato.anios} año${p.contrato.anios === 1 ? "" : "s"} restantes · Ahorros ${usd(p.ahorros || 0)}</p></div>
 
     <div class="fila">
-      ${fin ? `<button class="btn main" id="fin">Cerrar temporada</button>` : `<button class="btn main" id="jugar">Jugar próximo partido</button>`}
+      ${conv ? `<button class="btn main" id="seljugar">🇦🇷 Jugar con la Selección</button>` : fin ? `<button class="btn main" id="fin">Cerrar temporada</button>` : `<button class="btn main" id="jugar">Jugar próximo partido</button>`}
       <button class="btn" id="ges">Entrenamiento y contrato</button>
       <button class="btn" id="btn-guardar" style="background-color: #3b82f6; color: white; border: none;">Guardar Partida</button>
       <button class="btn" id="menu">Menú</button>
@@ -128,6 +133,7 @@ export function pantallaCarrera(el) {
   on("#menu", () => ir("menu")); on("#cal", () => ir("calendario")); on("#ges", () => ir("gestion"));
   on("#btn-tabla", () => abrirTabla(p));
   on("#jugar", () => ir("partido")); on("#fin", () => ir("fin"));
+  on("#seljugar", () => ir("seleccion")); on("#selinfo", () => ir("selinfo"));
   on("#btn-guardar", () => {
     const b = el.querySelector("#btn-guardar");
     if (!(estado.user?.uid && p.id)) return aviso("No hay usuario conectado.");

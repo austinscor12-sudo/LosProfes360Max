@@ -13,7 +13,8 @@ import { pantallaGestion } from "./gestion.js";
 import { pantallaTabla } from "./tabla.js";
 import { pantallaFin } from "./fintemporada.js";
 import { pantallaRetiro } from "./retiro.js";
+import { pantallaSeleccion, pantallaSelInfo } from "./pantallaseleccion.js";
 
-Object.assign(rutas, { auth: pantallaAuth, menu: pantallaMenu, jugador: pantallaJugador, posicion: pantallaPosicion, equipo: pantallaEquipo, cargar: pantallaCargar, carrera: pantallaCarrera, calendario: pantallaCalendario, partido: pantallaPartido, gestion: pantallaGestion, tabla: pantallaTabla, fin: pantallaFin, retiro: pantallaRetiro });
+Object.assign(rutas, { auth: pantallaAuth, menu: pantallaMenu, jugador: pantallaJugador, posicion: pantallaPosicion, equipo: pantallaEquipo, cargar: pantallaCargar, carrera: pantallaCarrera, calendario: pantallaCalendario, partido: pantallaPartido, gestion: pantallaGestion, tabla: pantallaTabla, fin: pantallaFin, retiro: pantallaRetiro, seleccion: pantallaSeleccion, selinfo: pantallaSelInfo });
 
 onUser(u => { estado.user = u; ir(u ? "menu" : "auth"); });
