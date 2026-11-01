@@ -8,9 +8,7 @@ import { rolSegun } from "./evolucion.js";
 import { generarCalendario } from "./fixture.js";
 import { crearLiga } from "./liga.js";
 import { esLigaEsp, nuevoMundoEsp } from "./espana.js";
-
-const color = n => `hsl(${[...n].reduce((a, c) => a + c.charCodeAt(0) * 7, 0) % 360} 55% 38%)`;
-const sigla = n => n.replace(/\(.*?\)/g, "").trim().split(/\s+/).map(w => w[0]).join("").slice(0, 3).toUpperCase();
+import { escudo } from "./escudo.js";
 
 export function pantallaEquipo(el) {
   let liga = LIGAS[0], busca = "", elegido = null, atributos = null;
@@ -27,12 +25,12 @@ export function pantallaEquipo(el) {
   const pintar = () => {
     el.querySelectorAll(".tab").forEach(t => t.classList.toggle("sel", t.dataset.id === liga.id));
     el.querySelector("#lista").innerHTML = liga.equipos.filter(n => n.toLowerCase().includes(busca))
-      .map(n => `<button class="card ${n === elegido ? "sel" : ""}" data-n="${n}"><div class="escudo" style="background:${color(n)}">${sigla(n)}</div><b>${n}</b></button>`).join("") || "<p class='sub'>Sin resultados.</p>";
+      .map(n => `<button class="card ${n === elegido ? "sel" : ""}" data-n="${n}"><div style="margin-bottom:10px">${escudo(n, 54)}</div><b>${n}</b></button>`).join("") || "<p class='sub'>Sin resultados.</p>";
     const r = el.querySelector("#resumen");
     r.style.display = elegido ? "block" : "none";
     if (elegido) {
       const rol = rolSegun(calcularOverall(estado.nuevo.posicion, atributosIniciales()) - nivelPlantel(elegido));
-      r.innerHTML = `<b>${elegido}</b><div class="tags">${COMPETICIONES[liga.id].map(c => `<span>${c}</span>`).join("")}</div>
+      r.innerHTML = `<div style="display:flex;align-items:center;gap:12px">${escudo(elegido, 46)}<b style="font-size:1.2rem">${elegido}</b></div><div class="tags">${COMPETICIONES[liga.id].map(c => `<span>${c}</span>`).join("")}</div>
         <p class="sub" style="margin:10px 0 0">Nivel del club: ${fuerzaDe(elegido)} · Rol con el que arrancarías: <b>${rol}</b></p>`;
     }
     el.querySelector("#ok").disabled = !elegido;

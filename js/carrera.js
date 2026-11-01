@@ -11,6 +11,7 @@ import { abrirTabla } from "./tabla.js";
 import { guardarTodo } from "./firebase.js";
 import { PRIMERA, NACIONAL } from "./data/equipos.js";
 import { esArgentino, hayPendientes } from "./seleccion.js";
+import { escudo } from "./escudo.js";
 import { panelSeleccion } from "./pantallaseleccion.js";
 
 // ==========================================
@@ -67,8 +68,8 @@ export function pantallaCarrera(el) {
 
   el.innerHTML = `
     <div class="cabecera" style="margin-bottom: 15px;">
-      <div><h2>${esc(j.nombre)} ${esc(j.apellido)}${j.apodo ? ` “${esc(j.apodo)}”` : ""}</h2>
-      <p class="sub">${pos} · ${j.edad} años · ${esc(j.nacionalidad)} · pie ${j.pie.toLowerCase()}</p></div>
+      <div style="display:flex;gap:14px;align-items:center">${escudo(p.equipo, 56)}<div><h2>${esc(j.nombre)} ${esc(j.apellido)}${j.apodo ? ` “${esc(j.apodo)}”` : ""}</h2>
+      <p class="sub">${pos} · ${j.edad} años · ${esc(j.nacionalidad)} · pie ${j.pie.toLowerCase()}</p></div></div>
       <div class="tags"><span>${esc(p.equipo)}</span><span>Temporada ${p.temporada}</span><span>${rolEstimado(p)}</span>${les ? `<span class="lesion">🩹 ${esc(les.nombre)} · ${les.restantes} partidos</span>` : ""}</div>
     </div>
 

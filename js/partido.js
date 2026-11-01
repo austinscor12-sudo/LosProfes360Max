@@ -10,6 +10,7 @@ import { temporadaTerminada } from "./fixture.js";
 import { guardarTodo } from "./firebase.js";
 import { abrirTabla } from "./tabla.js";
 import { hayPendientes } from "./seleccion.js";
+import { escudo } from "./escudo.js";
 
 // Después de un partido del club: si te convocaron, primero va la Selección; si no, cierre de temporada o seguir.
 const destino = p => hayPendientes(p) ? "carrera" : temporadaTerminada(p.calendario) ? "fin" : "carrera";
@@ -30,7 +31,7 @@ export function pantallaPartido(el) {
   const les = p.lesion;
   el.innerHTML = `
     <h2>Día de partido</h2><p class="sub">${esc(m.comp)} · ${esc(m.etiqueta)} · ${sede(m)}</p>
-    <div class="marcador"><div class="eq">${esc(p.equipo)}<small>Fuerza ${fuerzaEquipo(p.equipo)}</small></div><div class="res">vs</div><div class="eq">${esc(m.rival)}<small>Fuerza ${fuerzaEquipo(m.rival)}</small></div></div>
+    <div class="marcador"><div class="eq">${escudo(p.equipo, 52, "display:block;margin:0 auto 6px")}${esc(p.equipo)}<small>Fuerza ${fuerzaEquipo(p.equipo)}</small></div><div class="res">vs</div><div class="eq">${escudo(m.rival, 52, "display:block;margin:0 auto 6px")}${esc(m.rival)}<small>Fuerza ${fuerzaEquipo(m.rival)}</small></div></div>
     <div class="panel"><h2>Tu situación</h2>
       <div class="dato"><span>Rol en el plantel</span><b>${rolEstimado(p)}</b></div>
       <div class="dato"><span>Para este partido</span><b>${rol}</b></div>
@@ -60,7 +61,7 @@ export function reproducir(el, m, res, ap, ctx = {}) {
   const p = estado.partida, eq = ctx.equipo || p.equipo;
   el.innerHTML = `
     <h2>${esc(m.comp)} · ${esc(m.etiqueta)}</h2><p class="sub">${sede(m)}</p>
-    <div class="marcador"><div class="eq">${esc(eq)}</div><div class="res" id="res">0 - 0</div><div class="eq">${esc(m.rival)}</div></div>
+    <div class="marcador"><div class="eq">${escudo(eq, 52, "display:block;margin:0 auto 6px")}${esc(eq)}</div><div class="res" id="res">0 - 0</div><div class="eq">${escudo(m.rival, 52, "display:block;margin:0 auto 6px")}${esc(m.rival)}</div></div>
     <p class="minuto" id="min">Previa</p>
     <div id="resumen"></div>
     <div class="panel" id="feed"></div>

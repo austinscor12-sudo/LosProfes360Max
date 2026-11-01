@@ -3,6 +3,7 @@ import { esc } from "./util.js";
 import { calcularTabla, torneoActual } from "./liga.js";
 import { tablaOrdenada } from "./simulacion.js";
 import { ZONAS, zonaDe } from "./espana.js";
+import { escudo } from "./escudo.js";
 
 // Abre la tabla que corresponda: la real de la Liga Profesional (zonas) o la simple de las demás ligas.
 export function abrirTabla(p) { if (p.fixture) mostrarTabla(p); else ir("tabla"); }
@@ -30,7 +31,7 @@ export function mostrarTabla(p) {
       const corte = !anual && k === 7 ? "border-bottom:2px dashed #f2c14e;" : "";
       const dif = f.gf - f.gc;
       return `<tr style="${fondo}${corte}text-align:center;">
-        <td style="padding:8px;">${k + 1}</td><td style="text-align:left;padding:8px;">${esc(f.nombre)}</td>
+        <td style="padding:8px;">${k + 1}</td><td style="text-align:left;padding:8px;">${escudo(f.nombre, 20, "vertical-align:middle;margin-right:8px")}${esc(f.nombre)}</td>
         <td><b>${f.pts}</b></td><td>${f.pj}</td><td>${f.pg}</td><td>${f.pe}</td><td>${f.pp}</td><td>${f.gf}</td><td>${f.gc}</td><td>${dif > 0 ? "+" : ""}${dif}</td></tr>`;
     }).join("");
     const nota = anual
@@ -71,7 +72,7 @@ export function pantallaTabla(el) {
   const pintar = () => {
     el.querySelectorAll(".tab").forEach(t => t.classList.toggle("sel", t.dataset.c === sel));
     el.querySelector("#t").innerHTML = `<table class="tabla"><tr><th>#</th><th>Equipo</th><th>PJ</th><th>G</th><th>E</th><th>P</th><th>DG</th><th>Pts</th></tr>
-      ${tablaOrdenada(p.tablas[sel]).map((x, i) => `<tr class="${x.equipo === p.equipo ? "mi" : ""}"><td${zonaDe(sel, i + 1) ? ` style="box-shadow:inset 4px 0 0 ${zonaDe(sel, i + 1)[2]}"` : ""}>${i + 1}</td><td>${esc(x.equipo)}</td><td>${x.pj}</td><td>${x.g}</td><td>${x.e}</td><td>${x.p}</td><td>${x.gf - x.gc}</td><td><b>${x.pts}</b></td></tr>`).join("")}</table>
+      ${tablaOrdenada(p.tablas[sel]).map((x, i) => `<tr class="${x.equipo === p.equipo ? "mi" : ""}"><td${zonaDe(sel, i + 1) ? ` style="box-shadow:inset 4px 0 0 ${zonaDe(sel, i + 1)[2]}"` : ""}>${i + 1}</td><td>${escudo(x.equipo, 20, "vertical-align:middle;margin-right:8px")}${esc(x.equipo)}</td><td>${x.pj}</td><td>${x.g}</td><td>${x.e}</td><td>${x.p}</td><td>${x.gf - x.gc}</td><td><b>${x.pts}</b></td></tr>`).join("")}</table>
       ${ZONAS[sel] ? `<div style="margin-top:12px;font-size:13px">${ZONAS[sel].z.map(([a, b, c, t]) => `<p style="margin:3px 0"><span style="display:inline-block;width:10px;height:10px;background:${c};margin-right:6px"></span>${a === b ? a + ".º" : a + ".º al " + b + ".º"}: ${t}</p>`).join("")}${ZONAS[sel].nota ? `<p class="sub" style="margin-top:8px">${ZONAS[sel].nota}</p>` : ""}</div>` : ""}`;
   };
   if (comps.length) { el.querySelector(".tabs").onclick = e => { const t = e.target.closest(".tab"); if (!t) return; sel = estado.tabTabla = t.dataset.c; pintar(); }; pintar(); }
