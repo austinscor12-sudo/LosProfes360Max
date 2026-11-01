@@ -1,5 +1,6 @@
 // Aplica el resultado de un partido a la partida: estadísticas, forma, lesiones, entrenamiento, tabla y copa.
-import { siguienteCopa } from "./fixture.js";
+import { siguienteCopa, esCopa } from "./fixture.js";
+import { resolverCopaEsp } from "./espana.js";
 import { actualizarTabla, posicionEn } from "./simulacion.js";
 import { aplicarLesion, entrenarSemana } from "./evolucion.js";
 import { registrarFecha, calcularTabla } from "./liga.js";
@@ -48,14 +49,16 @@ export function aplicarResultado(p, m, res) {
   const e = entrenarSemana(p, j.minutos ? j : null);
   out.mejoras = e.mejoras; out.lesionEntreno = e.lesion; out.recuperado = e.recuperado;
 
-  if (m.comp !== "Copa Argentina") {
+  if (esCopa(m) && m.comp !== "Copa Argentina") {
+    resolverCopaEsp(p, m, res, out);     // Copa del Rey / Supercopa de España
+  } else if (m.comp !== "Copa Argentina") {
     const real = p.fixture && m.torneo;   // liga real (zonas) o calendario simple con tabla propia
     if (real) { registrarFecha(p, m); out.tabla = { comp: m.comp, ...puesto(p, [m.torneo], false) }; }
     else { actualizarTabla(p, m, gm, gr); out.tabla = { comp: m.comp, ...posicionEn(p, m.comp) }; }
     if (p.calendario.filter(x => x.comp === m.comp).every(x => x.jugado)) {
       t.pos[m.comp] = out.tabla.pos;
       out.cierres.push(`${m.comp}: terminaste ${out.tabla.pos}° de ${out.tabla.total}${real ? " en tu zona" : ""}.`);
-      if (!real && out.tabla.pos === 1) { p.palmares.push({ temporada: p.temporada, titulo: m.comp }); out.cierres.push(`¡Campeón del ${m.comp}!`); }
+      if (!real && out.tabla.pos === 1) { p.palmares.push({ temporada: p.temporada, titulo: m.comp }); out.cierres.push(`¡Campeón de ${m.comp}!`); }
       if (real && m.torneo === "CL") { const a = puesto(p, ["AP", "CL"], true); t.pos.Anual = a.pos; out.cierres.push(`Tabla anual: ${a.pos}° de 30.`); }
     }
   } else if (res.clasificado) {

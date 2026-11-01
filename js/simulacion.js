@@ -1,6 +1,7 @@
 // Motor de simulación de partidos: minuto a minuto, con eventos, estadísticas y nota del jugador.
 import { fuerzaEquipo, nivelPlantel, APELLIDOS, INICIALES } from "./data/fuerza.js";
 import { generarLesion, probTitular } from "./evolucion.js";
+import { esCopa } from "./fixture.js";
 
 const az = (a, b) => a + Math.random() * (b - a);
 const ent = (a, b) => Math.floor(az(a, b + 1));
@@ -28,7 +29,8 @@ const resultado = g => {
   if (u < g + .50) return "afuera"; if (u < g + .59) return "bloq"; return "nada";
 };
 
-export function simularPartido({ equipo, rival, local, p, rol, copa, copaNombre }) {
+// agregado = {mi, riv}: goles de la ida en una serie a dos partidos (Copa del Rey). El empate se mide sobre el global.
+export function simularPartido({ equipo, rival, local, p, rol, copa, copaNombre, agregado }) {
   const j = p.jugador, A = p.atributos, pos = p.posicion;
   const yo = j.apodo || j.apellido;
   const fat = p.fatiga || 0, forma = p.forma ?? 60;
@@ -189,10 +191,11 @@ export function simularPartido({ equipo, rival, local, p, rol, copa, copaNombre 
   }
   if (rol === "Suplente" && !juega) push(93, "info", `${yo}, el DT no te hizo ingresar. Te quedaste en el banco.`, true);
 
-  /* ---- Penales (Copa Argentina) ---- */
+  /* ---- Penales (copas de eliminación directa) ---- */
   let penales = null;
-  if (copa && gM === gR) {
-    push(93, "info", `Empate ${gM}-${gR}: ${copaNombre || "la Copa Argentina"} se define por penales.`);
+  const aM = gM + (agregado?.mi || 0), aR = gR + (agregado?.riv || 0);
+  if (copa && aM === aR) {
+    push(93, "info", `Empate ${agregado ? "global " : ""}${aM}-${aR}: ${copaNombre || "la Copa Argentina"} se define por penales.`);
     const yoToma = juega && fin >= 90 && pos !== "ARQ" && prob(.55), turno = yoToma ? ent(1, 5) : 0;
     const yoAtajo = juega && fin >= 90 && pos === "ARQ";
     let a = 0, b = 0;
@@ -211,7 +214,7 @@ export function simularPartido({ equipo, rival, local, p, rol, copa, copaNombre 
     }
     penales = { mi: a, riv: b };
   }
-  const clasificado = gM > gR || (gM === gR && !!penales && penales.mi > penales.riv);
+  const clasificado = aM > aR || (aM === aR && !!penales && penales.mi > penales.riv);
   push(93, "fin", `Final del partido: ${equipo} ${gM} - ${gR} ${rival}${penales ? ` (penales ${penales.mi}-${penales.riv})` : ""}.`);
 
   /* ---- Estadísticas de fondo y nota ---- */
@@ -243,7 +246,7 @@ const anotar = (t, gf, gc) => { t.pj++; t.gf += gf; t.gc += gc; if (gf > gc) { t
 
 // Registra tu resultado y simula el resto de la fecha para los demás equipos de la zona.
 export function actualizarTabla(p, m, gm, gr) {
-  if (m.comp === "Copa Argentina") return;
+  if (esCopa(m)) return;
   const equipos = [p.equipo, ...new Set(p.calendario.filter(x => x.comp === m.comp).map(x => x.rival))];
   if (!p.tablas[m.comp]) p.tablas[m.comp] = Object.fromEntries(equipos.map(e => [e, { pj: 0, g: 0, e: 0, p: 0, gf: 0, gc: 0, pts: 0 }]));
   const t = p.tablas[m.comp];

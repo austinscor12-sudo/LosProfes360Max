@@ -1,6 +1,6 @@
 import { ir, estado, aviso } from "./router.js";
 import { esc } from "./util.js";
-import { sede } from "./fixture.js";
+import { sede, esEliminatoria, textoCopa } from "./fixture.js";
 import { ETIQUETAS } from "./atributos.js";
 import { fuerzaEquipo } from "./data/fuerza.js";
 import { simularPartido, decidirRol, fmtMin } from "./simulacion.js";
@@ -26,7 +26,7 @@ export function pantallaPartido(el) {
   const p = estado.partida, m = p.calendario.find(x => !x.jugado);
   if (!m) return ir("carrera");
   if (!estado.sesion || estado.sesion.id !== m.id) estado.sesion = { id: m.id, rol: decidirRol(p) };
-  const rol = estado.sesion.rol, copa = m.comp === "Copa Argentina", sinJugar = rol === "Lesionado" || rol === "No convocado";
+  const rol = estado.sesion.rol, copa = esEliminatoria(m), sinJugar = rol === "Lesionado" || rol === "No convocado";
   const les = p.lesion;
   el.innerHTML = `
     <h2>Día de partido</h2><p class="sub">${esc(m.comp)} · ${esc(m.etiqueta)} · ${sede(m)}</p>
@@ -37,7 +37,7 @@ export function pantallaPartido(el) {
       <p class="sub" style="margin:8px 0">${MENSAJE_ROL[rol]}${les ? ` (${esc(les.nombre)}: ${les.restantes} partido${les.restantes === 1 ? "" : "s"} más)` : ""}</p>
       <div class="attr"><span>Fatiga</span>${barra(p.fatiga, p.fatiga > 60)}<b>${p.fatiga}</b></div>
       <div class="attr"><span>Forma</span>${barra(p.forma)}<b>${p.forma}</b></div>
-      ${copa ? `<p class="sub" style="margin-top:10px">Copa Argentina: si hay empate se define por penales.</p>` : ""}
+      ${textoCopa(m, p.equipo) ? `<p class="sub" style="margin-top:10px">${esc(textoCopa(m, p.equipo))}</p>` : ""}
     </div>
     <p class="error" id="err"></p>
     <div class="fila"><button class="btn main" id="jugar">${sinJugar ? "Simular partido" : "Jugar partido"}</button><button class="btn" id="gest">Entrenamiento y contrato</button><button class="btn" id="atras">Volver</button></div>`;
@@ -45,7 +45,7 @@ export function pantallaPartido(el) {
   el.querySelector("#gest").onclick = () => ir("gestion");
   el.querySelector("#jugar").onclick = async e => {
     e.target.disabled = true;
-    const res = simularPartido({ equipo: p.equipo, rival: m.rival, local: m.local, p, rol, copa });
+    const res = simularPartido({ equipo: p.equipo, rival: m.rival, local: m.local, p, rol, copa, copaNombre: `la ${m.comp}`, agregado: m.agregado });
     const ap = aplicarResultado(p, m, res);
     estado.sesion = null;
     // Se guarda antes de mostrar el partido: si cerrás la pestaña a mitad, el resultado ya cuenta.

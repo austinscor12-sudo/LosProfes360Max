@@ -2,7 +2,7 @@ import { ir, estado, aviso } from "./router.js";
 import { POSICIONES, TEMPORADA_INICIAL } from "./data/competiciones.js";
 import { esc } from "./util.js";
 import { ETIQUETAS } from "./atributos.js";
-import { textoPartido, sede, temporadaTerminada } from "./fixture.js";
+import { textoPartido, sede, temporadaTerminada, esCopa, nombreCopa } from "./fixture.js";
 import { completarPartida, rolEstimado, usd } from "./evolucion.js";
 import { noLeidos } from "./celular.js";
 import { vidaPendiente } from "./vida.js";
@@ -47,7 +47,7 @@ export function pantallaCarrera(el) {
 
   // Estadísticas colectivas del equipo
   let misPuntos = 0, misPG = 0, misPE = 0, misPP = 0;
-  p.calendario.filter(m => m.jugado === true && (!p.fixture || m.torneo)).forEach(m => {
+  p.calendario.filter(m => m.jugado === true && !esCopa(m) && (!p.fixture || m.torneo)).forEach(m => {
     const esLocal = m.local !== false;
     const aFavor = esLocal ? (m.resultado?.local || 0) : (m.resultado?.visitante || 0);
     const enContra = esLocal ? (m.resultado?.visitante || 0) : (m.resultado?.local || 0);
@@ -76,7 +76,7 @@ export function pantallaCarrera(el) {
 
     <div class="panel" style="margin-bottom:16px"><h2>Temporada ${p.temporada}</h2>
       <div class="stats" style="margin:12px 0 0">${stat("Partidos", t.partidos)}${stat("Goles", t.goles)}${stat("Asistencias", t.asist)}${stat("Nota media", nota)}</div>
-      ${t.copa ? `<p class="sub" style="margin:10px 0 0">Copa Argentina: ${esc(t.copa)}</p>` : ""}</div>
+      ${t.copa ? `<p class="sub" style="margin:10px 0 0">${nombreCopa(p)}: ${esc(t.copa)}</p>` : ""}${t.supercopa ? `<p class="sub" style="margin:6px 0 0">Supercopa de España: ${esc(t.supercopa)}</p>` : ""}</div>
 
     ${esArgentino(p) ? panelSeleccion(p) : ""}
 

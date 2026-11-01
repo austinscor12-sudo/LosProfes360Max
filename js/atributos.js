@@ -20,7 +20,7 @@ export function generarAtributos(pos, jugador, liga) {
   const edad = jugador.edad;
   // La experiencia sube la base hasta ~27 años; cae el ritmo pasados los 32.
   const exp = Math.max(-4, Math.min(12, (edad - 18) * 1.3));
-  const ligaAjuste = liga === "AR2" ? -4 : 0;
+  const ligaAjuste = { AR2: -4, ES2: -2, ES3: -4 }[liga] ?? 0;
   const alt = (jugador.altura || 178) - 178;
   const a = {};
   for (const k in perfil.base) {

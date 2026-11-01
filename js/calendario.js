@@ -27,7 +27,12 @@ export function pantallaCalendario(el) {
     <div class="fila"><button class="btn" id="atras">Volver</button></div>`;
   const pintar = () => {
     el.querySelectorAll(".tab").forEach(t => t.classList.toggle("sel", t.dataset.c === sel));
-    const nota = sel === "Copa Argentina" ? `<p class="sub">Eliminación directa en cancha neutral. Las próximas rondas se definen según tus resultados.</p>` : "";
+    const NOTAS = {
+      "Copa Argentina": "Eliminación directa en cancha neutral. Las próximas rondas se definen según tus resultados.",
+      "Copa del Rey": "Eliminación directa entre clubes de todas las categorías. Las rondas iniciales son a partido único en la cancha del equipo de menor categoría; las semifinales son a ida y vuelta y la final es en un estadio neutral. Las próximas rondas se definen según tus resultados.",
+      "Supercopa de España": "Se juega en enero con formato Final Four (semifinales y final en cancha neutral). Clasifican el campeón y el subcampeón de LaLiga y de la Copa del Rey de la temporada anterior."
+    };
+    const nota = NOTAS[sel] ? `<p class="sub">${NOTAS[sel]}</p>` : "";
     el.querySelector("#lista").innerHTML = nota + cal.filter(m => m.comp === sel).map(m => m.jugado === true ? `
       <div class="item"><span>${esc(m.etiqueta)}</span><div>${textoJugado(m, p.equipo)}</div></div>` : `
       <div class="item"><span>${esc(m.etiqueta)}</span><b>${esc(textoPartido(m, p.equipo))}</b>

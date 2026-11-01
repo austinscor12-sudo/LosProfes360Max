@@ -8,6 +8,7 @@ import { crearLiga } from "./liga.js";
 import { efectos, nuevasFinanzas, cierreFinanzas } from "./finanzas.js";
 import { nuevoCelular } from "./celular.js";
 import { nuevaVida } from "./vida.js";
+import { esLigaEsp, mundoEspana, cierreEspana, ligaEspDe, prepararEsp } from "./espana.js";
 
 const ent = (a, b) => Math.floor(Math.random() * (b - a + 1)) + a;
 const lim = (n, a, b) => Math.max(a, Math.min(b, n));
@@ -80,7 +81,8 @@ export function completarPartida(p) {
     else p.fixture = null;
     c = true;
   }
-  if (!p.calendario) { p.calendario = generarCalendario(p.equipo, p.liga); c = true; }
+  if (prepararEsp(p)) c = true;   // partida vieja de España: se arma el mundo (y el calendario con Copa si todavía no se jugó nada)
+  if (!p.calendario) { p.calendario = generarCalendario(p.equipo, p.liga, p.esp, p.temporada); c = true; }
   const ovr = calcularOverall(p.posicion, p.atributos);
   if (p.progreso.overall !== ovr) { p.progreso.overall = ovr; c = true; }
   set("potencial", () => potencialInicial(ovr, j.edad));
@@ -163,10 +165,10 @@ export function evolucionAnual(p) {
 }
 
 /* ---------- Ofertas, renovación y fichajes ---------- */
-const ligaDe = n => LIGAS.find(l => l.equipos.includes(n))?.id;
+const ligaDe = (n, p) => (p && ligaEspDe(p, n)) || LIGAS.find(l => l.equipos.includes(n))?.id;
 const esEuropa = id => LIGAS.find(l => l.id === id)?.europa === true;
 const CLUBES_AR = LIGAS.filter(l => !l.europa).flatMap(l => l.equipos);
-const CLUBES_EU = LIGAS.filter(l => l.europa).flatMap(l => l.equipos);
+const CLUBES_EU = LIGAS.filter(l => l.europa && !l.oculta).flatMap(l => l.equipos);   // la tercera categoría de España (oculta) no hace ofertas
 
 // Retiro: desde los 34 podés decidirlo vos; a los 42 el cuerpo dice basta (la última temporada se juega con 41).
 export const EDAD_RETIRO_VOLUNTARIO = 34;
@@ -198,21 +200,22 @@ export function generarOfertas(p, libre) {
     elegidos.push(deEU ? E.pop() : A.pop() ?? E.pop());
   }
   return elegidos.map(club => ({
-    equipo: club, liga: ligaDe(club), rol: rolSegun(ovr - nivelPlantel(club)), anios: ent(2, 4),
-    salario: Math.round(salarioPara(val) * (.9 + Math.random() * .5) * (fuerzaEquipo(club) / 66) * (esEuropa(ligaDe(club)) ? 1.5 : 1) * (libre ? 1.1 : 1) / 100) * 100,
+    equipo: club, liga: ligaDe(club, p), rol: rolSegun(ovr - nivelPlantel(club)), anios: ent(2, 4),
+    salario: Math.round(salarioPara(val) * (.9 + Math.random() * .5) * (fuerzaEquipo(club) / 66) * (esEuropa(ligaDe(club, p)) ? 1.5 : 1) * (libre ? 1.1 : 1) / 100) * 100,
     monto: libre ? 0 : Math.round(val * (.8 + Math.random() * .6) / 1000) * 1000
   }));
 }
 
 function cambiarLiga(p, id) {
   p.liga = id; p.ligaNombre = LIGAS.find(l => l.id === id).nombre; p.competiciones = COMPETICIONES[id];
+  if (esLigaEsp(id)) mundoEspana(p);
 }
 export function fichar(p, o) {
   p.traspasos.push({ temporada: p.temporada, de: p.equipo, a: o.equipo, monto: o.monto });
   p.equipo = o.equipo;
   if (p.liga !== o.liga) cambiarLiga(p, o.liga);
   p.contrato = { anios: o.anios, salario: o.salario }; p.renov = { estado: "firmada" };
-  if (p.fin) { p.fin.ascenso = false; p.fin.descenso = false; p.fin.fichado = true; }
+  if (p.fin) { p.fin.ascenso = false; p.fin.descenso = false; p.fin.nuevaLiga = null; p.fin.fichado = true; }
 }
 
 export function obtenerRenov(p) {
@@ -237,20 +240,23 @@ export function iniciarFin(p) {
   p.historial.push({ temporada: p.temporada, equipo: p.equipo, partidos: t.partidos, goles: t.goles, asist: t.asist, nota: t.partidos ? +(t.notaSuma / t.partidos).toFixed(2) : 0, pos, copa: t.copa });
   const evo = evolucionAnual(p);
   p.contrato.anios = Math.max(0, p.contrato.anios - 1);
-  const ascenso = p.liga === "AR2" && pos["Primera Nacional"] > 0 && pos["Primera Nacional"] <= 2;
+  let ascenso = p.liga === "AR2" && pos["Primera Nacional"] > 0 && pos["Primera Nacional"] <= 2;
   const ap = pos["Torneo Apertura"], cl = pos["Torneo Clausura"];
-  const descenso = p.liga === "AR1" && (pos.Anual ? pos.Anual >= 29 : (ap && cl && (ap + cl) / 2 >= 14));
-  return { paso: 0, evo, finanzas: cierreFinanzas(p), ofertas: generarOfertas(p, p.contrato.anios === 0), ascenso, descenso, fichado: false, forzado: evo.edad >= EDAD_RETIRO_FORZADO };
+  let descenso = p.liga === "AR1" && (pos.Anual ? pos.Anual >= 29 : (ap && cl && (ap + cl) / 2 >= 14));
+  let nuevaLiga = ascenso ? "AR1" : descenso ? "AR2" : null, esp = {};
+  // España: ascensos, descensos, playoff, cupos europeos y la Supercopa del año que viene (todo antes de generar las ofertas).
+  if (esLigaEsp(p.liga)) { const c = cierreEspana(p); ascenso = c.ascenso; descenso = c.descenso; nuevaLiga = c.nuevaLiga; esp = c.info; }
+  return { paso: 0, evo, finanzas: cierreFinanzas(p), ofertas: generarOfertas(p, p.contrato.anios === 0), ascenso, descenso, nuevaLiga, esp, fichado: false, forzado: evo.edad >= EDAD_RETIRO_FORZADO };
 }
 // Primera: liga real (zonas + fixture) si el club está entre los 30 de la liga; si no, calendario simple.
 function armarCalendario(p) {
   const lg = p.liga === "AR1" ? crearLiga(p.equipo) : null;
   if (lg) { p.zona = lg.zona; p.equiposLiga = lg.equipos; p.fixture = lg.fixture; p.calendario = lg.calendario; }
-  else { p.zona = null; p.equiposLiga = null; p.fixture = null; p.calendario = generarCalendario(p.equipo, p.liga); }
+  else { p.zona = null; p.equiposLiga = null; p.fixture = null; if (esLigaEsp(p.liga)) mundoEspana(p); p.calendario = generarCalendario(p.equipo, p.liga, p.esp, p.temporada); }
 }
 export function comenzarTemporada(p) {
-  if (p.fin.ascenso) cambiarLiga(p, "AR1");
-  if (p.fin.descenso) cambiarLiga(p, "AR2");
+  const nueva = p.fin.nuevaLiga ?? (p.fin.ascenso ? "AR1" : p.fin.descenso ? "AR2" : null);   // (las partidas viejas no guardaban nuevaLiga)
+  if (nueva && nueva !== p.liga) cambiarLiga(p, nueva);
   p.temporada++; p.temp = nuevaTemp(); p.tablas = {};
   armarCalendario(p);
   p.fatiga = Math.round(p.fatiga * .3); p.forma = 60;
