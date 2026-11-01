@@ -2,28 +2,37 @@ import { ir, estado, aviso } from "./router.js";
 import { salir, listarPartidas } from "./firebase.js";
 import { esc } from "./util.js";
 
+const opcion = (a, ico, titulo, desc, extra = "", attrs = "") =>
+  `<button class="btn opt ${extra}" data-a="${a}" ${attrs}><span class="m-ico" aria-hidden="true">${ico}</span><span class="m-txt"><b>${titulo}</b><small>${desc}</small></span></button>`;
+
 export function pantallaMenu(el) {
   el.innerHTML = `
-    <h1>Modo Carrera</h1><p class="sub">Hola, ${esc(estado.user.displayName || estado.user.email)}.</p>
+    <header class="hero">
+      <p class="hero-tag">Simulador de carrera</p>
+      <h1>Modo <span>Carrera</span></h1>
+      <p class="sub">Hola, ${esc(estado.user.displayName || estado.user.email)}.</p>
+      <div class="rueda" aria-hidden="true"><span class="balon">⚽</span></div>
+    </header>
     <nav class="menu">
-      <button class="btn" data-a="cont" hidden></button>
-      <button class="btn main" data-a="nueva">Nueva temporada</button>
-      <button class="btn" data-a="cargar">Cargar partida</button>
-      <button class="btn" data-a="op">Opciones</button>
-      <button class="btn" data-a="cred">Créditos</button>
-      <button class="btn" data-a="salir">Cerrar sesión</button>
+      ${opcion("cont", "🎽", "Continuar", "", "", "hidden")}
+      ${opcion("nueva", "⚽", "Nueva temporada", "Creá tu jugador y empezá tu historia", "main")}
+      ${opcion("cargar", "📂", "Cargar partida", "Retomá una carrera guardada")}
+      ${opcion("op", "⚙️", "Opciones", "Ajustes del juego")}
+      ${opcion("cred", "🏆", "Créditos", "Quién armó todo esto")}
+      ${opcion("salir", "🚪", "Cerrar sesión", "Hasta la próxima, crack", "sale")}
     </nav>`;
   let ultima = null;
   listarPartidas(estado.user.uid).then(l => {
     if (!l.length || !el.isConnected) return;
     ultima = l[0];
     const b = el.querySelector('[data-a="cont"]');
-    b.textContent = `Continuar: ${ultima.jugador.nombre} ${ultima.jugador.apellido} (${ultima.equipo})`;
+    b.querySelector(".m-txt b").textContent = "Continuar";
+    b.querySelector(".m-txt small").textContent = `${ultima.jugador.nombre} ${ultima.jugador.apellido} · ${ultima.equipo}`;
     b.hidden = false; b.classList.add("main");
     el.querySelector('[data-a="nueva"]').classList.remove("main");
   }).catch(() => {});
   el.querySelector(".menu").onclick = e => {
-    const a = e.target.dataset.a;
+    const a = e.target.closest("[data-a]")?.dataset.a;
     if (a === "cont" && ultima) { estado.partida = ultima; ir("carrera"); }
     else if (a === "nueva") { estado.nuevo = {}; ir("jugador"); }
     else if (a === "cargar") ir("cargar");

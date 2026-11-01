@@ -3,8 +3,13 @@ import { errorAuth } from "./util.js";
 
 export function pantallaAuth(el) {
   el.innerHTML = `
-    <h1>Modo Carrera</h1><p class="sub">Entrá para guardar tu progreso.</p>
-    <div class="panel campos" style="max-width:480px">
+    <header class="hero">
+      <p class="hero-tag">Simulador de carrera</p>
+      <h1>Modo <span>Carrera</span></h1>
+      <p class="sub">Entrá para guardar tu progreso.</p>
+      <div class="rueda" aria-hidden="true"><span class="balon">⚽</span></div>
+    </header>
+    <div class="panel campos" style="max-width:480px;margin-top:22px">
       <label>Email<input id="em" type="email" autocomplete="email"></label>
       <label>Contraseña<input id="pw" type="password" autocomplete="current-password"></label>
     </div>
