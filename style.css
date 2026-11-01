@@ -153,5 +153,9 @@ input[readonly]{opacity:.7}
   #app>.fila:last-child .btn{flex:none;white-space:nowrap;font-size:1rem;padding:10px 14px;min-height:44px}
   #app>.fila:last-child .btn.main{box-shadow:0 3px 0 #b88a1e}
 }
+/* Opciones elegidas en la pantalla Opciones (se aplican sobre <html>) */
+html.texto-grande{font-size:118%}
+html.sin-anim *,html.sin-anim *::before,html.sin-anim *::after{transition:none!important;animation:none!important}
+html.sin-barra #app>.fila:last-child{position:static;flex-wrap:wrap;overflow:visible;margin:20px 0 0;padding:0;background:none;border:0;border-radius:0;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}
 @media (max-width:520px){#app{padding:22px 14px 50px}.opt{padding:11px 12px;gap:12px}.panel{padding:18px}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}

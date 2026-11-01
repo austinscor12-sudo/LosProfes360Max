@@ -11,6 +11,7 @@ import { guardarTodo } from "./firebase.js";
 import { abrirTabla } from "./tabla.js";
 import { hayPendientes } from "./seleccion.js";
 import { escudo } from "./escudo.js";
+import { velocidadPartido } from "./opciones.js";
 
 // Después de un partido del club: si te convocaron, primero va la Selección; si no, cierre de temporada o seguir.
 const destino = p => hayPendientes(p) ? "carrera" : temporadaTerminada(p.calendario) ? "fin" : "carrera";
@@ -88,7 +89,7 @@ export function reproducir(el, m, res, ap, ctx = {}) {
     if (!el.isConnected) return;
     if (i >= res.eventos.length) return terminar();
     const e = res.eventos[i]; mostrar();
-    timer = setTimeout(paso, e.t === "gol" || e.t === "golR" ? 1300 : 650);
+    timer = setTimeout(paso, (e.t === "gol" || e.t === "golR" ? 1300 : 650) * velocidadPartido());
   };
   el.querySelector("#saltar").onclick = () => { while (i < res.eventos.length) mostrar(); terminar(); };
   paso();

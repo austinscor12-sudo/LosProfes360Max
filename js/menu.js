@@ -1,4 +1,4 @@
-import { ir, estado, aviso } from "./router.js";
+import { ir, estado } from "./router.js";
 import { salir, listarPartidas } from "./firebase.js";
 import { esc } from "./util.js";
 
@@ -17,7 +17,7 @@ export function pantallaMenu(el) {
       ${opcion("cont", "🎽", "Continuar", "", "", "hidden")}
       ${opcion("nueva", "⚽", "Nueva temporada", "Creá tu jugador y empezá tu historia", "main")}
       ${opcion("cargar", "📂", "Cargar partida", "Retomá una carrera guardada")}
-      ${opcion("op", "⚙️", "Opciones", "Ajustes del juego")}
+      ${opcion("op", "⚙️", "Opciones", "Velocidad, texto y más")}
       ${opcion("cred", "🏆", "Créditos", "Quién armó todo esto")}
       ${opcion("salir", "🚪", "Cerrar sesión", "Hasta la próxima, crack", "sale")}
     </nav>`;
@@ -37,6 +37,7 @@ export function pantallaMenu(el) {
     else if (a === "nueva") { estado.nuevo = {}; ir("jugador"); }
     else if (a === "cargar") ir("cargar");
     else if (a === "salir") { if (confirm("¿Cerrar sesión?")) salir(); }
-    else if (a) aviso("Próximamente");
+    else if (a === "op") ir("opciones");
+    else if (a === "cred") ir("creditos");
   };
 }
