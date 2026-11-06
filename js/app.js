@@ -1,7 +1,7 @@
 import { onUser } from "./firebase.js";
 import { estado, rutas, ir } from "./router.js";
 import { pantallaAuth } from "./auth.js";
-import { pantallaMenu } from "./menu.js";
+import { pantallaMenu, aplicarOpciones } from "./menu.js";
 import { pantallaJugador } from "./jugador.js";
 import { pantallaPosicion } from "./posicion.js";
 import { pantallaEquipo } from "./equipo.js";
@@ -19,4 +19,5 @@ import { pantallaSeleccion, pantallaSelInfo } from "./pantallaseleccion.js";
 
 Object.assign(rutas, { auth: pantallaAuth, menu: pantallaMenu, jugador: pantallaJugador, posicion: pantallaPosicion, equipo: pantallaEquipo, cargar: pantallaCargar, carrera: pantallaCarrera, calendario: pantallaCalendario, partido: pantallaPartido, gestion: pantallaGestion, tabla: pantallaTabla, fin: pantallaFin, retiro: pantallaRetiro, celular: pantallaCelular, vida: pantallaVida, seleccion: pantallaSeleccion, selinfo: pantallaSelInfo });
 
+aplicarOpciones();
 onUser(u => { estado.user = u; ir(u ? "menu" : "auth"); });

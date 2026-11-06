@@ -1,9 +1,9 @@
-@import url("https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&family=Figtree:wght@400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:wght@600;700&family=Figtree:wght@400;500;600;700&display=swap");
 :root{--cesped:#0b2417;--cesped2:#17402c;--linea:#2c6a4a;--tiza:#f2f5ef;--gris:#9db3a5;--oro:#f2c14e;--oro2:#ffdb7a;--error:#ff7b6b;--r:12px;--titulo:"Anton",Impact,"Arial Narrow Bold",sans-serif;--cond:"Barlow Condensed","Arial Narrow",sans-serif}
 *{box-sizing:border-box;margin:0}
 html{scrollbar-color:var(--linea) var(--cesped)}
 ::selection{background:var(--oro);color:#1b2b1f}
-body{min-height:100vh;color:var(--tiza);font-family:"Trebuchet MS","Segoe UI",sans-serif;line-height:1.5;overflow-x:hidden;background:
+body{min-height:100vh;color:var(--tiza);font-family:"Figtree","Trebuchet MS","Segoe UI",sans-serif;line-height:1.5;overflow-x:hidden;background:
   radial-gradient(ellipse 70% 40% at 50% -5%,rgba(255,244,200,.16),transparent 70%),
   repeating-linear-gradient(90deg,rgba(255,255,255,.028) 0 70px,transparent 70px 140px),
   radial-gradient(circle at 50% -20%,var(--cesped2),var(--cesped) 65%);background-attachment:fixed}
@@ -51,7 +51,7 @@ h2{font-family:var(--titulo);font-weight:400;font-size:1.7rem;letter-spacing:.03
 .opt:active{transform:translateX(4px) scale(.99)}
 .m-ico{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;font-size:1.4rem;background:rgba(255,255,255,.07);border:1px solid var(--linea)}
 .m-txt b{display:block;font-weight:700;font-size:1.2rem;line-height:1.15}
-.m-txt small{display:block;color:var(--gris);font-family:"Trebuchet MS","Segoe UI",sans-serif;font-weight:400;font-size:.8rem;letter-spacing:0;text-transform:none;margin-top:2px}
+.m-txt small{display:block;color:var(--gris);font-family:"Figtree","Trebuchet MS","Segoe UI",sans-serif;font-weight:400;font-size:.8rem;letter-spacing:0;text-transform:none;margin-top:2px}
 .opt.main{background:linear-gradient(135deg,var(--oro2),var(--oro));box-shadow:0 4px 0 #b88a1e,0 8px 18px rgba(0,0,0,.3)}
 .opt.main::before{background:#1b2b1f}
 .opt.main::after{color:#1b2b1f}
@@ -114,7 +114,7 @@ input[readonly]{opacity:.7}
 
 /* Partido en vivo */
 .marcador{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:center;text-align:center;margin-bottom:8px;background:linear-gradient(180deg,#07150e,#0d2217);border:1px solid var(--linea);border-radius:14px;padding:18px 12px;box-shadow:inset 0 0 30px rgba(0,0,0,.5)}
-.marcador .eq{font-family:var(--cond);font-weight:700;font-size:1.3rem;letter-spacing:.05em;text-transform:uppercase}.marcador .eq small{display:block;color:var(--gris);font-family:"Trebuchet MS","Segoe UI",sans-serif;font-weight:400;font-size:.8rem;letter-spacing:0;text-transform:none}
+.marcador .eq{font-family:var(--cond);font-weight:700;font-size:1.3rem;letter-spacing:.05em;text-transform:uppercase}.marcador .eq small{display:block;color:var(--gris);font-family:"Figtree","Trebuchet MS","Segoe UI",sans-serif;font-weight:400;font-size:.8rem;letter-spacing:0;text-transform:none}
 .marcador .res{font-family:var(--titulo);font-size:clamp(2rem,9vw,3.4rem);color:var(--oro);line-height:1;letter-spacing:.05em;text-shadow:0 0 18px rgba(242,193,78,.5)}
 .minuto{text-align:center;color:var(--gris);margin-bottom:16px;font-family:var(--cond);font-weight:600;letter-spacing:.2em;text-transform:uppercase}
 .ev{display:grid;grid-template-columns:56px 28px 1fr;gap:8px;align-items:start;padding:9px 6px;border-bottom:1px solid var(--linea);animation:entra .3s}
@@ -215,3 +215,25 @@ h2{font-weight:800}
 .fig .tags span{border-color:rgba(28,20,5,.45);color:#1c1405;background:rgba(255,255,255,.22);font-weight:600}
 .fig .tags span.lesion{color:#8c1a0e;border-color:#8c1a0e}
 @media (max-width:520px){.fig{grid-template-columns:1fr;border-radius:20px 20px 40px 40px}.fig-izq{display:flex;align-items:center;gap:14px}.fig-pos{width:auto;border:0;margin:0;padding:0}.fig h2 em{font-size:2.3rem}}
+
+/* ---- Mejoras: orden visual de la pantalla de carrera, menú y opciones ---- */
+#app>.panel,#app>.stats,#app>.fig{margin-bottom:16px}
+.opt.sec{background:linear-gradient(135deg,rgba(0,0,0,.34),rgba(0,0,0,.18));color:var(--tiza)}
+.opt.sale{opacity:.75}
+.panel.club{border-color:var(--oro);background:linear-gradient(180deg,rgba(242,193,78,.1),rgba(0,0,0,.25))}
+.dato-club{margin:6px 0 0;font-size:.95rem}
+.colectiva{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;text-align:center;margin:10px 0 14px;padding:12px 6px;background:rgba(0,0,0,.3);border:1px solid var(--linea);border-radius:var(--r)}
+.colectiva b{display:block;font-family:var(--titulo);font-weight:400;font-size:1.7rem;line-height:1.1}
+.colectiva span{font-size:.75rem;color:var(--gris)}
+.colectiva .g b{color:#6ee7a0}.colectiva .e b{color:var(--oro)}.colectiva .p b{color:var(--error)}
+.item.nota-alta,.item.nota-media,.item.nota-baja{border-left:4px solid var(--oro);padding-left:12px}
+.item.nota-alta{border-left-color:#6ee7a0}.item.nota-baja{border-left-color:var(--error)}
+.res-hist{margin:4px 0;font-size:1rem}
+.btn.guardar{border-color:#5aa9ff;color:#cfe6ff}
+.btn.guardar:hover{background:rgba(90,169,255,.14);border-color:#8cc3ff}
+.opciones{display:grid;gap:6px;max-width:560px}
+.interruptor{display:flex;gap:14px;align-items:flex-start;padding:12px 4px;border-bottom:1px solid rgba(255,255,255,.08);cursor:pointer}
+.interruptor:last-child{border-bottom:0}
+.interruptor input{width:22px;height:22px;margin-top:3px;accent-color:var(--oro);flex:none}
+.interruptor b{display:block}.interruptor small{color:var(--gris)}
+@media (max-width:520px){.colectiva{grid-template-columns:repeat(2,1fr)}}
