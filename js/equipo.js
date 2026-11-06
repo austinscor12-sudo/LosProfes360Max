@@ -7,8 +7,9 @@ import { generarAtributos, calcularOverall } from "./atributos.js";
 import { rolSegun } from "./evolucion.js";
 import { generarCalendario } from "./fixture.js";
 import { crearLiga } from "./liga.js";
-import { esLigaEsp, nuevoMundoEsp } from "./espana.js";
-import { escudo } from "./escudo.js";
+
+const color = n => `hsl(${[...n].reduce((a, c) => a + c.charCodeAt(0) * 7, 0) % 360} 55% 38%)`;
+const sigla = n => n.replace(/\(.*?\)/g, "").trim().split(/\s+/).map(w => w[0]).join("").slice(0, 3).toUpperCase();
 
 export function pantallaEquipo(el) {
   let liga = LIGAS[0], busca = "", elegido = null, atributos = null;
@@ -16,7 +17,7 @@ export function pantallaEquipo(el) {
   const atributosIniciales = () => atributos ||= generarAtributos(estado.nuevo.posicion, estado.nuevo.jugador, liga.id);
   el.innerHTML = `
     <h2>Elegí tu equipo</h2><p class="sub">Elegí liga y club. Podés arrancar en Argentina o directo en Europa.</p>
-    <div class="tabs">${LIGAS.filter(l => !l.oculta).map(l => `<button class="tab" data-id="${l.id}">${l.nombre}</button>`).join("")}</div>
+    <div class="tabs">${LIGAS.map(l => `<button class="tab" data-id="${l.id}">${l.nombre}</button>`).join("")}</div>
     <label style="max-width:320px;margin-bottom:14px">Buscar equipo<input id="q"></label>
     <div class="grid" id="lista"></div>
     <div class="panel" id="resumen" style="margin-top:20px;display:none"></div>
@@ -25,12 +26,12 @@ export function pantallaEquipo(el) {
   const pintar = () => {
     el.querySelectorAll(".tab").forEach(t => t.classList.toggle("sel", t.dataset.id === liga.id));
     el.querySelector("#lista").innerHTML = liga.equipos.filter(n => n.toLowerCase().includes(busca))
-      .map(n => `<button class="card ${n === elegido ? "sel" : ""}" data-n="${n}"><div style="margin-bottom:10px">${escudo(n, 54)}</div><b>${n}</b></button>`).join("") || "<p class='sub'>Sin resultados.</p>";
+      .map(n => `<button class="card ${n === elegido ? "sel" : ""}" data-n="${n}"><div class="escudo" style="background:${color(n)}">${sigla(n)}</div><b>${n}</b></button>`).join("") || "<p class='sub'>Sin resultados.</p>";
     const r = el.querySelector("#resumen");
     r.style.display = elegido ? "block" : "none";
     if (elegido) {
       const rol = rolSegun(calcularOverall(estado.nuevo.posicion, atributosIniciales()) - nivelPlantel(elegido));
-      r.innerHTML = `<div style="display:flex;align-items:center;gap:12px">${escudo(elegido, 46)}<b style="font-size:1.2rem">${elegido}</b></div><div class="tags">${COMPETICIONES[liga.id].map(c => `<span>${c}</span>`).join("")}</div>
+      r.innerHTML = `<b>${elegido}</b><div class="tags">${COMPETICIONES[liga.id].map(c => `<span>${c}</span>`).join("")}</div>
         <p class="sub" style="margin:10px 0 0">Nivel del club: ${fuerzaDe(elegido)} · Rol con el que arrancarías: <b>${rol}</b></p>`;
     }
     el.querySelector("#ok").disabled = !elegido;
@@ -48,9 +49,6 @@ export function pantallaEquipo(el) {
       if (liga.id === "AR1") {
         const lg = crearLiga(elegido);
         extra = { zona: lg.zona, equiposLiga: lg.equipos, fixture: lg.fixture, calendario: lg.calendario };
-      } else if (esLigaEsp(liga.id)) {
-        const esp = nuevoMundoEsp();   // España: liga + Copa del Rey + Supercopa, con ascensos y descensos entre categorías
-        extra = { esp, calendario: generarCalendario(elegido, liga.id, esp, TEMPORADA_INICIAL) };
       } else extra = { calendario: generarCalendario(elegido, liga.id) };
       const datos = {
         jugador: estado.nuevo.jugador, posicion: estado.nuevo.posicion,

@@ -1,6 +1,6 @@
 import { ir, estado, aviso } from "./router.js";
 import { esc } from "./util.js";
-import { sede, esEliminatoria, textoCopa } from "./fixture.js";
+import { sede } from "./fixture.js";
 import { ETIQUETAS } from "./atributos.js";
 import { fuerzaEquipo } from "./data/fuerza.js";
 import { simularPartido, decidirRol, fmtMin } from "./simulacion.js";
@@ -10,8 +10,6 @@ import { temporadaTerminada } from "./fixture.js";
 import { guardarTodo } from "./firebase.js";
 import { abrirTabla } from "./tabla.js";
 import { hayPendientes } from "./seleccion.js";
-import { escudo } from "./escudo.js";
-import { velocidadPartido } from "./opciones.js";
 
 // Después de un partido del club: si te convocaron, primero va la Selección; si no, cierre de temporada o seguir.
 const destino = p => hayPendientes(p) ? "carrera" : temporadaTerminada(p.calendario) ? "fin" : "carrera";
@@ -28,18 +26,18 @@ export function pantallaPartido(el) {
   const p = estado.partida, m = p.calendario.find(x => !x.jugado);
   if (!m) return ir("carrera");
   if (!estado.sesion || estado.sesion.id !== m.id) estado.sesion = { id: m.id, rol: decidirRol(p) };
-  const rol = estado.sesion.rol, copa = esEliminatoria(m), sinJugar = rol === "Lesionado" || rol === "No convocado";
+  const rol = estado.sesion.rol, copa = m.comp === "Copa Argentina", sinJugar = rol === "Lesionado" || rol === "No convocado";
   const les = p.lesion;
   el.innerHTML = `
     <h2>Día de partido</h2><p class="sub">${esc(m.comp)} · ${esc(m.etiqueta)} · ${sede(m)}</p>
-    <div class="marcador"><div class="eq">${escudo(p.equipo, 52, "display:block;margin:0 auto 6px")}${esc(p.equipo)}<small>Fuerza ${fuerzaEquipo(p.equipo)}</small></div><div class="res">vs</div><div class="eq">${escudo(m.rival, 52, "display:block;margin:0 auto 6px")}${esc(m.rival)}<small>Fuerza ${fuerzaEquipo(m.rival)}</small></div></div>
+    <div class="marcador"><div class="eq">${esc(p.equipo)}<small>Fuerza ${fuerzaEquipo(p.equipo)}</small></div><div class="res">vs</div><div class="eq">${esc(m.rival)}<small>Fuerza ${fuerzaEquipo(m.rival)}</small></div></div>
     <div class="panel"><h2>Tu situación</h2>
       <div class="dato"><span>Rol en el plantel</span><b>${rolEstimado(p)}</b></div>
       <div class="dato"><span>Para este partido</span><b>${rol}</b></div>
       <p class="sub" style="margin:8px 0">${MENSAJE_ROL[rol]}${les ? ` (${esc(les.nombre)}: ${les.restantes} partido${les.restantes === 1 ? "" : "s"} más)` : ""}</p>
       <div class="attr"><span>Fatiga</span>${barra(p.fatiga, p.fatiga > 60)}<b>${p.fatiga}</b></div>
       <div class="attr"><span>Forma</span>${barra(p.forma)}<b>${p.forma}</b></div>
-      ${textoCopa(m, p.equipo) ? `<p class="sub" style="margin-top:10px">${esc(textoCopa(m, p.equipo))}</p>` : ""}
+      ${copa ? `<p class="sub" style="margin-top:10px">Copa Argentina: si hay empate se define por penales.</p>` : ""}
     </div>
     <p class="error" id="err"></p>
     <div class="fila"><button class="btn main" id="jugar">${sinJugar ? "Simular partido" : "Jugar partido"}</button><button class="btn" id="gest">Entrenamiento y contrato</button><button class="btn" id="atras">Volver</button></div>`;
@@ -47,7 +45,7 @@ export function pantallaPartido(el) {
   el.querySelector("#gest").onclick = () => ir("gestion");
   el.querySelector("#jugar").onclick = async e => {
     e.target.disabled = true;
-    const res = simularPartido({ equipo: p.equipo, rival: m.rival, local: m.local, p, rol, copa, copaNombre: `la ${m.comp}`, agregado: m.agregado });
+    const res = simularPartido({ equipo: p.equipo, rival: m.rival, local: m.local, p, rol, copa });
     const ap = aplicarResultado(p, m, res);
     estado.sesion = null;
     // Se guarda antes de mostrar el partido: si cerrás la pestaña a mitad, el resultado ya cuenta.
@@ -62,7 +60,7 @@ export function reproducir(el, m, res, ap, ctx = {}) {
   const p = estado.partida, eq = ctx.equipo || p.equipo;
   el.innerHTML = `
     <h2>${esc(m.comp)} · ${esc(m.etiqueta)}</h2><p class="sub">${sede(m)}</p>
-    <div class="marcador"><div class="eq">${escudo(eq, 52, "display:block;margin:0 auto 6px")}${esc(eq)}</div><div class="res" id="res">0 - 0</div><div class="eq">${escudo(m.rival, 52, "display:block;margin:0 auto 6px")}${esc(m.rival)}</div></div>
+    <div class="marcador"><div class="eq">${esc(eq)}</div><div class="res" id="res">0 - 0</div><div class="eq">${esc(m.rival)}</div></div>
     <p class="minuto" id="min">Previa</p>
     <div id="resumen"></div>
     <div class="panel" id="feed"></div>
@@ -72,7 +70,8 @@ export function reproducir(el, m, res, ap, ctx = {}) {
   const mostrar = () => {
     const e = res.eventos[i++];
     feed.insertAdjacentHTML("afterbegin", fila(e));
-    marc.textContent = `${e.gm} - ${e.gr}`; min.textContent = e.t === "fin" ? "Final" : `Minuto ${fmtMin(e.m)}`;
+    marc.textContent = `${e.gm} - ${e.gr}`;
+    if (e.t === "gol" || e.t === "golR") { const mk = marc.closest(".marcador"); mk.classList.remove("flash", "flashR"); void mk.offsetWidth; mk.classList.add(e.t === "gol" ? "flash" : "flashR"); } min.textContent = e.t === "fin" ? "Final" : `Minuto ${fmtMin(e.m)}`;
   };
   const terminar = () => {
     clearTimeout(timer);
@@ -89,7 +88,7 @@ export function reproducir(el, m, res, ap, ctx = {}) {
     if (!el.isConnected) return;
     if (i >= res.eventos.length) return terminar();
     const e = res.eventos[i]; mostrar();
-    timer = setTimeout(paso, (e.t === "gol" || e.t === "golR" ? 1300 : 650) * velocidadPartido());
+    timer = setTimeout(paso, e.t === "gol" || e.t === "golR" ? 1300 : 650);
   };
   el.querySelector("#saltar").onclick = () => { while (i < res.eventos.length) mostrar(); terminar(); };
   paso();

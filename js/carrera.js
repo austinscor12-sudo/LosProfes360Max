@@ -2,7 +2,7 @@ import { ir, estado, aviso } from "./router.js";
 import { POSICIONES, TEMPORADA_INICIAL } from "./data/competiciones.js";
 import { esc } from "./util.js";
 import { ETIQUETAS } from "./atributos.js";
-import { textoPartido, sede, temporadaTerminada, esCopa, nombreCopa } from "./fixture.js";
+import { textoPartido, sede, temporadaTerminada } from "./fixture.js";
 import { completarPartida, rolEstimado, usd } from "./evolucion.js";
 import { noLeidos } from "./celular.js";
 import { vidaPendiente } from "./vida.js";
@@ -11,7 +11,6 @@ import { abrirTabla } from "./tabla.js";
 import { guardarTodo } from "./firebase.js";
 import { PRIMERA, NACIONAL } from "./data/equipos.js";
 import { esArgentino, hayPendientes } from "./seleccion.js";
-import { escudo } from "./escudo.js";
 import { panelSeleccion } from "./pantallaseleccion.js";
 
 // ==========================================
@@ -33,6 +32,9 @@ function obtenerDatosReales(nombreEquipo) {
     return DATOS_EQUIPOS_2026[nombreEquipo] || DATOS_EQUIPOS_2026["default"];
 }
 
+const colorEq = n => `hsl(${[...n].reduce((a, c) => a + c.charCodeAt(0) * 7, 0) % 360} 55% 38%)`;
+const sigla = n => n.replace(/\(.*?\)/g, "").trim().split(/\s+/).map(w => w[0]).join("").slice(0, 3).toUpperCase();
+
 export function pantallaCarrera(el) {
   const p = estado.partida;
   if (p.retirado) return ir("retiro");   // carrera terminada: se ve el resumen del retiro
@@ -48,7 +50,7 @@ export function pantallaCarrera(el) {
 
   // Estadísticas colectivas del equipo
   let misPuntos = 0, misPG = 0, misPE = 0, misPP = 0;
-  p.calendario.filter(m => m.jugado === true && !esCopa(m) && (!p.fixture || m.torneo)).forEach(m => {
+  p.calendario.filter(m => m.jugado === true && (!p.fixture || m.torneo)).forEach(m => {
     const esLocal = m.local !== false;
     const aFavor = esLocal ? (m.resultado?.local || 0) : (m.resultado?.visitante || 0);
     const enContra = esLocal ? (m.resultado?.visitante || 0) : (m.resultado?.local || 0);
@@ -67,17 +69,20 @@ export function pantallaCarrera(el) {
   const nota = t.partidos ? (t.notaSuma / t.partidos).toFixed(1) : "-";
 
   el.innerHTML = `
-    <div class="cabecera" style="margin-bottom: 15px;">
-      <div style="display:flex;gap:14px;align-items:center">${escudo(p.equipo, 56)}<div><h2>${esc(j.nombre)} ${esc(j.apellido)}${j.apodo ? ` “${esc(j.apodo)}”` : ""}</h2>
-      <p class="sub">${pos} · ${j.edad} años · ${esc(j.nacionalidad)} · pie ${j.pie.toLowerCase()}</p></div></div>
-      <div class="tags"><span>${esc(p.equipo)}</span><span>Temporada ${p.temporada}</span><span>${rolEstimado(p)}</span>${les ? `<span class="lesion">🩹 ${esc(les.nombre)} · ${les.restantes} partidos</span>` : ""}</div>
-    </div>
-
-    <div class="stats">${stat("Valoración", pr.overall)}${stat("Partidos (carrera)", pr.partidos)}${stat("Goles (carrera)", pr.goles)}${stat("Asistencias (carrera)", pr.asistencias)}</div>
+    <section class="fig">
+      <div class="fig-izq"><b class="fig-ovr">${pr.overall}</b><span class="fig-pos">${esc(p.posicion)}</span><div class="escudo" style="background:${colorEq(p.equipo)}">${sigla(p.equipo)}</div></div>
+      <div class="fig-der">
+        <h2>${esc(j.nombre)} <em>${esc(j.apellido)}</em></h2>
+        <p class="fig-sub">${pos} · ${j.edad} años · ${esc(j.nacionalidad)} · pie ${j.pie.toLowerCase()}${j.apodo ? ` · “${esc(j.apodo)}”` : ""}</p>
+        <div class="fig-attrs">${Object.entries(p.atributos).slice(0, 6).map(([k, v]) => `<div class="fig-a"><b>${v}</b><span>${ETIQUETAS[k]}</span></div>`).join("")}</div>
+        <div class="tags"><span>${esc(p.equipo)}</span><span>Temporada ${p.temporada}</span><span>${rolEstimado(p)}</span>${les ? `<span class="lesion">🩹 ${esc(les.nombre)} · ${les.restantes} partidos</span>` : ""}</div>
+      </div>
+    </section>
+    <div class="stats">${stat("Partidos (carrera)", pr.partidos)}${stat("Goles (carrera)", pr.goles)}${stat("Asistencias (carrera)", pr.asistencias)}</div>
 
     <div class="panel" style="margin-bottom:16px"><h2>Temporada ${p.temporada}</h2>
       <div class="stats" style="margin:12px 0 0">${stat("Partidos", t.partidos)}${stat("Goles", t.goles)}${stat("Asistencias", t.asist)}${stat("Nota media", nota)}</div>
-      ${t.copa ? `<p class="sub" style="margin:10px 0 0">${nombreCopa(p)}: ${esc(t.copa)}</p>` : ""}${t.supercopa ? `<p class="sub" style="margin:6px 0 0">Supercopa de España: ${esc(t.supercopa)}</p>` : ""}</div>
+      ${t.copa ? `<p class="sub" style="margin:10px 0 0">Copa Argentina: ${esc(t.copa)}</p>` : ""}</div>
 
     ${esArgentino(p) ? panelSeleccion(p) : ""}
 

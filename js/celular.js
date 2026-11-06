@@ -4,7 +4,6 @@ import { ir, estado, aviso } from "./router.js";
 import { esc } from "./util.js";
 import { guardarTodo } from "./firebase.js";
 import { tiene } from "./finanzas.js";
-import { equiposLigaEsp } from "./espana.js";
 
 const ent = (a, b) => Math.floor(Math.random() * (b - a + 1)) + a;
 const pick = a => a[Math.floor(Math.random() * a.length)];
@@ -49,7 +48,7 @@ export function generarCelular(p, m, res, out) {
   if (titulo) nota(`${p.equipo} festeja: ${ap} levantó la copa`);
   const t = p.temp; if (t.partidos >= 5 && t.notaSuma / t.partidos >= 7 && azar(.25)) nota(`Los analistas coinciden: ${ap} vive su mejor momento`);
   // Noticias de otros equipos
-  const eqs = (equiposLigaEsp(p) || LIGAS.find(l => l.id === p.liga)?.equipos || []).filter(e => e !== p.equipo);
+  const eqs = (LIGAS.find(l => l.id === p.liga)?.equipos || []).filter(e => e !== p.equipo);
   if (eqs.length > 2) for (let i = 0; i < 2; i++) {
     const A = pick(eqs), B = pick(eqs.filter(e => e !== A));
     nota(pick([`${A} golea y se ilusiona con pelear arriba`, `Crisis en ${A}: el DT, en la cuerda floja`, `${A} refuerza el plantel con un delantero de 22 años`, `Polémica en ${A}: los hinchas piden cambios`, `${A} y ${B} se miden en un clásico caliente`, `Los periodistas debaten: ¿es ${A} candidato este año?`, `Mercado de pases: ${B} sigue de cerca a figuras de la liga`]), "liga");

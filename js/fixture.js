@@ -1,6 +1,4 @@
 import { PRIMERA, NACIONAL, LIGAS } from "./data/equipos.js";
-import { esLigaEsp, calendarioEsp, nuevoMundoEsp, COPA_REY, SUPERCOPA } from "./espana.js";
-import { TEMPORADA_INICIAL } from "./data/competiciones.js";
 
 export const RONDAS_COPA = ["32avos de final", "16avos de final", "Octavos de final", "Cuartos de final", "Semifinal", "Final"];
 
@@ -18,22 +16,7 @@ const numerar = (comp, clave, lista) => lista.map((x, i) => ({
 // Misma lista de rivales pero en otro orden y con la localía invertida.
 const revancha = (lista) => mezclar(lista).map(x => ({ rival: x.rival, local: !x.local }));
 
-// Copas de eliminación directa: no suman a la tabla de la liga.
-export const COPAS = ["Copa Argentina", COPA_REY, SUPERCOPA];
-export const esCopa = m => COPAS.includes(m.comp);
-export const nombreCopa = p => esLigaEsp(p.liga) ? COPA_REY : "Copa Argentina";
-// Si hay empate en 90 minutos se define por penales (salvo en la ida de una serie a dos partidos).
-export const esEliminatoria = m => esCopa(m) && !(m.comp === COPA_REY && m.etiqueta === "Semifinal (ida)");
-export function textoCopa(m, equipo) {
-  if (!esCopa(m)) return "";
-  if (m.comp === COPA_REY && m.etiqueta === "Semifinal (ida)") return "Copa del Rey: partido de ida. La eliminatoria se define en la vuelta.";
-  if (m.agregado) return `Copa del Rey: partido de vuelta. En la ida, ${equipo} ${m.agregado.mi} - ${m.agregado.riv} ${m.rival}. Si el global sigue empatado, se define por penales.`;
-  return `${m.comp}: si hay empate se define por penales.`;
-}
-
-export function generarCalendario(equipo, ligaId, esp, temporada) {
-  // España: liga + Copa del Rey + Supercopa, con ascensos y descensos reales entre categorías (ver espana.js).
-  if (esLigaEsp(ligaId)) return calendarioEsp(esp || nuevoMundoEsp(), equipo, ligaId, temporada ?? TEMPORADA_INICIAL);
+export function generarCalendario(equipo, ligaId) {
   const inicio = Math.random() < 0.5;
   const alternar = rivales => rivales.map((rival, i) => ({ rival, local: (i % 2 === 0) === inicio }));
 

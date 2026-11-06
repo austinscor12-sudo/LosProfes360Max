@@ -2,9 +2,7 @@ export const COMPETICIONES = {
   AR1:["Torneo Apertura","Torneo Clausura","Copa Argentina","Trofeo de Campeones","Supercopa Argentina","Copa Libertadores (clasificación)","Copa Sudamericana (clasificación)"],
   AR2:["Primera Nacional (Zona + Reducido)","Copa Argentina"],
   EN1:["Premier League"],
-  ES1:["LaLiga","Copa del Rey","Supercopa de España","UEFA Champions League (clasificación)","UEFA Europa League (clasificación)","UEFA Conference League (clasificación)"],
-  ES2:["Segunda División (LaLiga Hypermotion)","Copa del Rey","Ascenso a Primera (directo y playoff)"],
-  ES3:["Primera Federación","Copa del Rey"],
+  ES1:["LaLiga"],
   IT1:["Serie A"],
   DE1:["Bundesliga"],
   FR1:["Ligue 1"]

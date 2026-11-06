@@ -20,16 +20,6 @@ export const FUERZA = {
   "Real Madrid": 89, "Barcelona": 89, "Atlético de Madrid": 85, "Athletic Club": 81, "Villarreal": 80, "Real Sociedad": 79, "Real Betis": 79,
   "Sevilla": 77, "Valencia": 76, "Celta de Vigo": 76, "Osasuna": 74, "Getafe": 73, "Rayo Vallecano": 73, "Espanyol": 72, "Alavés": 71,
   "Elche": 71, "Levante": 71, "Deportivo La Coruña": 70, "Racing Santander": 69, "Málaga": 69,
-  // Segunda División (LaLiga Hypermotion) 2026/27: valores míos, un escalón por debajo de LaLiga
-  "Girona": 68, "Mallorca": 68, "Real Oviedo": 66, "Almería": 66, "Granada": 66, "Las Palmas": 66, "Eibar": 65, "Real Valladolid": 65,
-  "Leganés": 65, "Sporting Gijón": 65, "Castellón": 65, "Cádiz": 64, "Burgos": 64, "Córdoba": 64, "Tenerife": 64, "FC Andorra": 63,
-  "Albacete": 62, "Sabadell": 62, "Eldense": 62, "Ceuta": 61, "Celta Fortuna": 60, "Real Sociedad II": 60,
-  // Tercera categoría y clubes de categorías inferiores (Copa del Rey)
-  "Cultural Leonesa": 58, "Mirandés": 58, "Real Murcia": 57, "Ponferradina": 57, "Hércules": 56, "Nàstic de Tarragona": 56,
-  "Unionistas de Salamanca": 55, "Racing de Ferrol": 55, "Alcorcón": 55, "Zamora": 54, "Real Unión": 54, "Pontevedra": 54, "Fuenlabrada": 54,
-  "Ibiza": 54, "Atlético Baleares": 54, "Barakaldo": 53, "Arenteiro": 53, "Alcoyano": 53, "Sestao River": 52, "Ourense": 52,
-  "Lugo": 52, "Cartagena": 52, "Algeciras": 51, "Recreativo de Huelva": 51, "Antequera": 50, "Intercity": 50, "Sanluqueño": 49, "Linares": 49,
-  "Teruel": 49, "Logroñés": 49, "Tarazona": 48, "Mérida": 48, "Marbella": 48, "Calahorra": 47, "Talavera": 47, "Cacereño": 47,
   // Serie A
   "Inter": 87, "Napoli": 85, "Juventus": 84, "Milan": 84, "Roma": 82, "Atalanta": 82, "Como": 79, "Lazio": 79, "Fiorentina": 78, "Bologna": 78,
   "Torino": 75, "Genoa": 74, "Udinese": 74, "Sassuolo": 73, "Parma": 72, "Cagliari": 71, "Lecce": 71, "Monza": 70, "Venezia": 70, "Frosinone": 69,
