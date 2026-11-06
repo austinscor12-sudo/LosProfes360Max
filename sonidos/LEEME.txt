@@ -1,0 +1,3 @@
+SONIDOS (opcional: si no ponés nada, el juego genera los suyos)
+Copiá tus archivos acá y asignalos en lista.json, por ejemplo:
+{"click": "click.mp3", "gol": "gol.mp3", "golR": "gol-en-contra.mp3", "ok": "ok.mp3", "error": "error.mp3", "pito": "pito.mp3"}

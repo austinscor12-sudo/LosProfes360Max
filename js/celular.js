@@ -4,6 +4,7 @@ import { ir, estado, aviso } from "./router.js";
 import { esc } from "./util.js";
 import { guardarTodo } from "./firebase.js";
 import { tiene } from "./finanzas.js";
+import { colorEquipo } from "./data/colores.js";
 
 const ent = (a, b) => Math.floor(Math.random() * (b - a + 1)) + a;
 const pick = a => a[Math.floor(Math.random() * a.length)];
@@ -129,9 +130,12 @@ export function pantallaCelular(el) {
   };
   const pintar = () => {
     const html = tab === "msgs" ? msgs() : tab === "noticias" ? noticias() : tab === "ops" ? ops() : insta();
-    el.innerHTML = `<h2>📱 Celular</h2><p class="sub">${esc(p.jugador.nombre)} ${esc(p.jugador.apellido)} · ${esc(p.equipo)}</p>
-      <div class="tabs"><button class="tab" data-t="msgs">💬 Mensajes</button><button class="tab" data-t="noticias">📰 Noticias</button><button class="tab" data-t="ops">🗣️ Opiniones</button><button class="tab" data-t="insta">📷 Instagram</button></div>${html}
-      <div class="fila"><button class="btn" id="atras">Volver</button></div>`;
+    el.innerHTML = `<div class="telefono"><div class="tel-marco" style="--eq1:${colorEquipo(p.equipo)}"><div class="tel-pantalla"><i class="tel-notch"></i>
+      <div class="tel-estado"><b>9:41</b><span>Sem ${c.sem} · 5G 🔋</span></div>
+      <div class="tel-app"><h2>${esc(p.jugador.nombre)} ${esc(p.jugador.apellido)}</h2><p class="sub">${esc(p.equipo)}</p>${html}</div>
+      <div class="tabs tel-nav"><button class="tab" data-t="msgs"><span>💬</span>Mensajes</button><button class="tab" data-t="noticias"><span>📰</span>Noticias</button><button class="tab" data-t="ops"><span>🗣️</span>Opiniones</button><button class="tab" data-t="insta"><span>📷</span>Insta</button></div>
+      <button class="tel-home" id="atras" aria-label="Volver al juego"></button></div></div></div>
+      <p class="sub tel-ayuda">Tocá la barra de abajo del celular para volver al juego.</p>`;
     if (tab === "msgs" && c.msgs.some(m => !m.leido)) { c.msgs.forEach(m => m.leido = true); guardar(); }
     el.querySelectorAll(".tab").forEach(t => t.classList.toggle("sel", t.dataset.t === tab));
     el.querySelector(".tabs").onclick = e => { const t = e.target.closest(".tab"); if (!t) return; tab = estado.tabCel = t.dataset.t; pintar(); };

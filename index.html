@@ -10,6 +10,19 @@
 <body>
   <main id="app"></main>
   <div id="toast" role="status"></div>
+  <script>
+    // Si el juego no carga, se muestra el motivo en pantalla en vez de dejarla vacía.
+    (function () {
+      function mostrar(msg) {
+        var a = document.getElementById("app"); if (!a || a.children.length) return;
+        a.innerHTML = '<h2>No se pudo cargar el juego</h2><p style="margin:10px 0">' + String(msg).replace(/</g, "&lt;") +
+          '</p><p style="opacity:.8">Abrilo con Live Server (no con doble clic), revisá que copiaste TODA la carpeta (incluida js/audio.js y js/data/colores.js) y apretá Ctrl+Shift+R. Si sigue igual, abrí F12 &gt; Consola y mandame el texto en rojo.</p>';
+      }
+      window.addEventListener("error", function (e) { mostrar(e.message || "Error al cargar un archivo del juego"); }, true);
+      window.addEventListener("unhandledrejection", function (e) { mostrar((e.reason && e.reason.message) || e.reason); });
+      setTimeout(function () { mostrar("Pasaron 8 segundos y no apareció nada. Puede ser un archivo que falta o que Firebase no respondió."); }, 8000);
+    })();
+  </script>
   <script type="module" src="js/app.js"></script>
 </body>
 </html>
