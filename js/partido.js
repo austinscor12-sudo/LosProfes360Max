@@ -1,3 +1,4 @@
+import { sonar } from "./audio.js";
 import { ir, estado, aviso } from "./router.js";
 import { esc } from "./util.js";
 import { sede } from "./fixture.js";
@@ -71,7 +72,7 @@ export function reproducir(el, m, res, ap, ctx = {}) {
     const e = res.eventos[i++];
     feed.insertAdjacentHTML("afterbegin", fila(e));
     marc.textContent = `${e.gm} - ${e.gr}`;
-    if (e.t === "gol" || e.t === "golR") { const mk = marc.closest(".marcador"); mk.classList.remove("flash", "flashR"); void mk.offsetWidth; mk.classList.add(e.t === "gol" ? "flash" : "flashR"); } min.textContent = e.t === "fin" ? "Final" : `Minuto ${fmtMin(e.m)}`;
+    if (e.t === "gol" || e.t === "golR") { const mk = marc.closest(".marcador"); mk.classList.remove("flash", "flashR"); void mk.offsetWidth; mk.classList.add(e.t === "gol" ? "flash" : "flashR"); sonar(e.t === "gol" ? "gol" : "golR"); } min.textContent = e.t === "fin" ? "Final" : `Minuto ${fmtMin(e.m)}`;
   };
   const terminar = () => {
     clearTimeout(timer);

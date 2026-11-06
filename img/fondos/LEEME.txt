@@ -1,0 +1,4 @@
+FONDOS
+Copiá tus imágenes (.jpg / .png / .webp) en esta carpeta y escribí los nombres en lista.json:
+["estadio.jpg", "cancha-de-noche.jpg"]
+Se van alternando con un fundido. Mejor imágenes horizontales y oscuras, para que se lean los textos.

@@ -1,3 +1,4 @@
+import { sonar } from "./audio.js";
 export const estado = { user: null, nuevo: {} };
 export const rutas = {};
 export function ir(nombre) {
@@ -9,7 +10,7 @@ export function ir(nombre) {
 }
 export function aviso(txt) {
   const t = document.getElementById("toast");
-  t.textContent = txt; t.classList.add("on");
+  t.textContent = txt; t.classList.add("on"); sonar(/error|no se pudo|no hay/i.test(txt) ? "error" : "ok");
   setTimeout(() => t.classList.remove("on"), 2400);
 }
 

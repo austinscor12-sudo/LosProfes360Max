@@ -1,5 +1,6 @@
 import { ir, estado, aviso } from "./router.js";
 import { LIGAS } from "./data/equipos.js";
+import { escudoStyle } from "./data/colores.js";
 import { nivelPlantel, fuerzaDe } from "./data/fuerza.js";
 import { COMPETICIONES, TEMPORADA_INICIAL } from "./data/competiciones.js";
 import { guardarPartida } from "./firebase.js";
@@ -8,7 +9,6 @@ import { rolSegun } from "./evolucion.js";
 import { generarCalendario } from "./fixture.js";
 import { crearLiga } from "./liga.js";
 
-const color = n => `hsl(${[...n].reduce((a, c) => a + c.charCodeAt(0) * 7, 0) % 360} 55% 38%)`;
 const sigla = n => n.replace(/\(.*?\)/g, "").trim().split(/\s+/).map(w => w[0]).join("").slice(0, 3).toUpperCase();
 
 export function pantallaEquipo(el) {
@@ -26,7 +26,7 @@ export function pantallaEquipo(el) {
   const pintar = () => {
     el.querySelectorAll(".tab").forEach(t => t.classList.toggle("sel", t.dataset.id === liga.id));
     el.querySelector("#lista").innerHTML = liga.equipos.filter(n => n.toLowerCase().includes(busca))
-      .map(n => `<button class="card ${n === elegido ? "sel" : ""}" data-n="${n}"><div class="escudo" style="background:${color(n)}">${sigla(n)}</div><b>${n}</b></button>`).join("") || "<p class='sub'>Sin resultados.</p>";
+      .map(n => `<button class="card ${n === elegido ? "sel" : ""}" data-n="${n}"><div class="escudo" style="${escudoStyle(n)}">${sigla(n)}</div><b>${n}</b></button>`).join("") || "<p class='sub'>Sin resultados.</p>";
     const r = el.querySelector("#resumen");
     r.style.display = elegido ? "block" : "none";
     if (elegido) {

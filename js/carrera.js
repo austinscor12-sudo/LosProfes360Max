@@ -10,6 +10,7 @@ import { puestoEnZona } from "./liga.js";
 import { abrirTabla } from "./tabla.js";
 import { guardarTodo } from "./firebase.js";
 import { PRIMERA, NACIONAL } from "./data/equipos.js";
+import { escudoStyle, colorEquipo } from "./data/colores.js";
 import { esArgentino, hayPendientes } from "./seleccion.js";
 import { panelSeleccion } from "./pantallaseleccion.js";
 
@@ -32,7 +33,7 @@ function obtenerDatosReales(nombreEquipo) {
     return DATOS_EQUIPOS_2026[nombreEquipo] || DATOS_EQUIPOS_2026["default"];
 }
 
-const colorEq = n => `hsl(${[...n].reduce((a, c) => a + c.charCodeAt(0) * 7, 0) % 360} 55% 38%)`;
+
 const sigla = n => n.replace(/\(.*?\)/g, "").trim().split(/\s+/).map(w => w[0]).join("").slice(0, 3).toUpperCase();
 
 export function pantallaCarrera(el) {
@@ -70,60 +71,60 @@ export function pantallaCarrera(el) {
 
   el.innerHTML = `
     <section class="fig">
-      <div class="fig-izq"><b class="fig-ovr">${pr.overall}</b><span class="fig-pos">${esc(p.posicion)}</span><div class="escudo" style="background:${colorEq(p.equipo)}">${sigla(p.equipo)}</div></div>
+      <div class="fig-izq"><b class="fig-ovr">${pr.overall}</b><span class="fig-pos">${esc(p.posicion)}</span><div class="escudo" style="${escudoStyle(p.equipo)}">${sigla(p.equipo)}</div></div>
       <div class="fig-der">
         <h2>${esc(j.nombre)} <em>${esc(j.apellido)}</em></h2>
         <p class="fig-sub">${pos} · ${j.edad} años · ${esc(j.nacionalidad)} · pie ${j.pie.toLowerCase()}${j.apodo ? ` · “${esc(j.apodo)}”` : ""}</p>
         <div class="fig-attrs">${Object.entries(p.atributos).slice(0, 6).map(([k, v]) => `<div class="fig-a"><b>${v}</b><span>${ETIQUETAS[k]}</span></div>`).join("")}</div>
-        <div class="tags"><span>${esc(p.equipo)}</span><span>Temporada ${p.temporada}</span><span>${rolEstimado(p)}</span>${les ? `<span class="lesion">🩹 ${esc(les.nombre)} · ${les.restantes} partidos</span>` : ""}</div>
+        <div class="tags"><span class="club-tag" style="background:${colorEquipo(p.equipo)}">${esc(p.equipo)}</span><span>Temporada ${p.temporada}</span><span>${rolEstimado(p)}</span>${les ? `<span class="lesion">🩹 ${esc(les.nombre)} · ${les.restantes} partidos</span>` : ""}</div>
       </div>
     </section>
     <div class="stats">${stat("Partidos (carrera)", pr.partidos)}${stat("Goles (carrera)", pr.goles)}${stat("Asistencias (carrera)", pr.asistencias)}</div>
 
-    <div class="panel" style="margin-bottom:16px"><h2>Temporada ${p.temporada}</h2>
+    <div class="panel"><h2>Temporada ${p.temporada}</h2>
       <div class="stats" style="margin:12px 0 0">${stat("Partidos", t.partidos)}${stat("Goles", t.goles)}${stat("Asistencias", t.asist)}${stat("Nota media", nota)}</div>
       ${t.copa ? `<p class="sub" style="margin:10px 0 0">Copa Argentina: ${esc(t.copa)}</p>` : ""}</div>
 
     ${esArgentino(p) ? panelSeleccion(p) : ""}
 
-    ${datosClub ? `<div class="panel" style="margin-bottom:16px; background:#1a1a2e; border: 1px solid #333;">
-      <h2 style="color:#4ade80;">Actualidad del Club (Oct 2026)</h2>
-      <p style="margin:5px 0; font-size:14px;">📋 <b>DT Actual:</b> ${datosClub.dt}</p>
-      <p style="margin:5px 0; font-size:14px;">⭐ <b>Figuras:</b> ${datosClub.figuras}</p>
+    ${datosClub ? `<div class="panel club">
+      <h2>Actualidad del club</h2>
+      <p class="dato-club">📋 <b>DT:</b> ${datosClub.dt}</p>
+      <p class="dato-club">⭐ <b>Figuras:</b> ${datosClub.figuras}</p>
     </div>` : ""}
 
-    <div class="panel" style="margin-bottom:16px;">
+    <div class="panel">
       <h2>Estadísticas Colectivas</h2>
       ${infoZona}
-      <div style="display:flex; justify-content:space-between; text-align:center; margin-bottom:10px; background:#222; padding:10px; border-radius:8px;">
-          <div><b style="font-size:18px;">${misPuntos}</b><br><span style="font-size:11px; opacity:0.7;">Puntos</span></div>
-          <div><b style="font-size:18px; color:#4ade80;">${misPG}</b><br><span style="font-size:11px; opacity:0.7;">Victorias</span></div>
-          <div><b style="font-size:18px; color:#fbbf24;">${misPE}</b><br><span style="font-size:11px; opacity:0.7;">Empates</span></div>
-          <div><b style="font-size:18px; color:#f87171;">${misPP}</b><br><span style="font-size:11px; opacity:0.7;">Derrotas</span></div>
+      <div class="colectiva">
+          <div><b>${misPuntos}</b><span>Puntos</span></div>
+          <div class="g"><b>${misPG}</b><span>Victorias</span></div>
+          <div class="e"><b>${misPE}</b><span>Empates</span></div>
+          <div class="p"><b>${misPP}</b><span>Derrotas</span></div>
       </div>
-      <div class="fila"><button class="btn" id="btn-tabla" style="background:#444;">📊 Ver Tabla de Posiciones</button></div>
+      <div class="fila"><button class="btn" id="btn-tabla">📊 Tabla de posiciones</button></div>
     </div>
 
-    <div class="panel" style="margin-bottom:16px"><h2>Atributos</h2>
+    <div class="panel"><h2>Atributos</h2>
       <div class="attrs">${Object.entries(p.atributos).map(([k, v]) => `<div class="attr"><span>${ETIQUETAS[k]}</span><div class="barra"><i style="width:${v}%"></i></div><b>${v}</b></div>`).join("")}</div>
       <div class="attrs"><div class="attr"><span>Fatiga</span><div class="barra ${p.fatiga > 60 ? "mala" : ""}"><i style="width:${p.fatiga}%"></i></div><b>${p.fatiga}</b></div><div class="attr"><span>Forma</span><div class="barra"><i style="width:${p.forma}%"></i></div><b>${p.forma}</b></div></div>
     </div>
 
-    <div class="panel" style="margin-bottom:16px"><h2>Historial de Partidos</h2>
+    <div class="panel"><h2>Historial de Partidos</h2>
       ${jugados.length > 0 ? jugados.map(m => {
         const resLoc = m.resultado?.local ?? 0, resVis = m.resultado?.visitante ?? 0;
         const miNota = m.statsJugador?.nota?.toFixed(1) ?? "-";
         const textoRes = m.local !== false
           ? `${esc(p.equipo)} <b>${resLoc} - ${resVis}</b> ${esc(m.rival)}`
           : `${esc(m.rival)} <b>${resLoc} - ${resVis}</b> ${esc(p.equipo)}`;
-        return `<div class="item" style="border-left: 4px solid ${miNota >= 7 ? "#4ade80" : (miNota <= 5 ? "#f87171" : "#fbbf24")}; padding-left: 10px;">
-          <span>${esc(m.comp)}</span><div style="margin: 4px 0; font-size: 15px;">${textoRes}${m.penales ? ` (pen. ${m.penales.mi}-${m.penales.riv})` : ""}</div>
+        return `<div class="item ${miNota >= 7 ? "nota-alta" : (miNota <= 5 ? "nota-baja" : "nota-media")}">
+          <span>${esc(m.comp)}</span><div class="res-hist">${textoRes}${m.penales ? ` (pen. ${m.penales.mi}-${m.penales.riv})` : ""}</div>
           <small class="sub">Nota: <b>${miNota}</b> | ⚽ Goles: ${m.statsJugador?.goles ?? 0} | 👟 Asist: ${m.statsJugador?.asistencias ?? 0}</small>
         </div>`;
       }).join("") : "<p class='sub'>Aún no has debutado en la temporada.</p>"}
     </div>
 
-    <div class="panel" style="margin-bottom:16px"><h2>Próximos partidos</h2>
+    <div class="panel"><h2>Próximos partidos</h2>
       ${proximos.map(m => `<div class="item"><span>${esc(m.etiqueta)}</span><b>${esc(textoPartido(m, p.equipo))}</b><small class="sub">${esc(m.comp)} · ${sede(m)}</small></div>`).join("") || "<p class='sub'>No quedan partidos en el calendario.</p>"}
       <div class="fila"><button class="btn" id="cal">Ver calendario completo</button></div>
     </div>
@@ -135,7 +136,7 @@ export function pantallaCarrera(el) {
       <button class="btn" id="ges">Entrenamiento y contrato</button>
       <button class="btn" id="cel">📱 Celular${noLeidos(p) ? ` (${noLeidos(p)})` : ""}</button>
       <button class="btn" id="vida">🏠 Vida personal${vidaPendiente(p) ? ` (${vidaPendiente(p)})` : ""}</button>
-      <button class="btn" id="btn-guardar" style="background-color: #3b82f6; color: white; border: none;">Guardar Partida</button>
+      <button class="btn guardar" id="btn-guardar">💾 Guardar partida</button>
       <button class="btn" id="menu">Menú</button>
     </div>`;
 
@@ -147,10 +148,10 @@ export function pantallaCarrera(el) {
   on("#btn-guardar", () => {
     const b = el.querySelector("#btn-guardar");
     if (!(estado.user?.uid && p.id)) return aviso("No hay usuario conectado.");
-    b.textContent = "Guardando..."; b.disabled = true;
+    b.textContent = "Guardando…"; b.disabled = true;
     guardarTodo(estado.user.uid, p)
-      .then(() => aviso("¡Partida guardada correctamente en la nube!"))
+      .then(() => aviso("Partida guardada en la nube"))
       .catch(err => { console.error("Error Firebase:", err); aviso("Error al guardar. Revisá tu conexión a internet."); })
-      .finally(() => { b.textContent = "Guardar Partida"; b.disabled = false; });
+      .finally(() => { b.textContent = "💾 Guardar partida"; b.disabled = false; });
   });
 }

@@ -1,0 +1,5 @@
+MÚSICA DE FONDO
+1) Copiá tus archivos .mp3 (u .ogg / .wav) en esta carpeta.
+2) Abrí lista.json y escribí los nombres entre comillas, separados por coma:
+   ["tema1.mp3", "estadio.mp3"]
+Suenan mezclados, uno atrás del otro. En el navegador empieza con el primer toque a la pantalla.
