@@ -284,3 +284,51 @@ body::before{z-index:0}
 .tel-home{align-self:center;width:118px;height:5px;border:0;border-radius:9px;background:rgba(255,255,255,.55);margin:8px 0 10px;padding:0;cursor:pointer;flex:none}
 .tel-home:hover{background:var(--oro)}
 .tel-ayuda{text-align:center;font-size:.85rem}
+
+/* ---- Menos brillo / menos blanco (v3) ----
+   Causas: la fuente "Big Shoulders Display" nunca se cargaba y los pesos 800/900
+   sobre Anton/Impact se "engordan" a la fuerza (borroso y muy blanco); además había
+   resplandores (text-shadow), luces de fondo y destellos blancos muy fuertes. */
+:root{--titulo:"Anton",Impact,"Arial Narrow Bold",sans-serif;--cond:"Anton",Impact,"Arial Narrow Bold",sans-serif;--tiza:#c9d2c4;--gris:#85a08f}
+body{color:#b9c4b4;background:radial-gradient(55% 40% at 10% -6%,rgba(255,244,200,.07),transparent 68%),radial-gradient(55% 40% at 92% -6%,rgba(122,215,255,.05),transparent 68%),repeating-linear-gradient(0deg,rgba(255,255,255,.012) 0 88px,transparent 88px 176px),linear-gradient(180deg,#030a07,var(--cesped2) 130%);background-attachment:fixed}
+body::before{opacity:.5}
+/* Sin negrita falsa en las fuentes de título */
+h1,h2,.btn,.tab,.stat b,.colectiva b,.fig-ovr,.fig-pos,.fig-a b,.fig h2,.fig h2 em,.marcador .res,.m-txt b,.card b,.attr b{font-weight:400}
+.btn,.tab{letter-spacing:.05em}
+/* Textos: crema apagado en vez de blanco */
+h1,h2{color:#cdd3bf}
+h1{text-shadow:0 4px 0 rgba(0,0,0,.35)}
+.btn,.tab,input,select,.m-txt b{color:#c4ccbd}
+.btn.main,.tab.sel{color:#1b2b1f}
+.btn.guardar{color:#a9c4e4;border-color:#4a86c4}
+/* Sin resplandor en los números */
+.stat b{color:#c9d1c2;text-shadow:0 2px 0 rgba(0,0,0,.35)}
+.stat span{color:#8aa593}
+.marcador .res{text-shadow:0 2px 0 rgba(0,0,0,.4)}
+.colectiva b{text-shadow:none}
+/* Paneles y tarjetas más oscuros, sin reflejo blanco */
+.panel{background:linear-gradient(160deg,rgba(255,255,255,.035),rgba(0,0,0,.4));border-color:rgba(255,255,255,.07);box-shadow:0 1px 0 rgba(255,255,255,.03) inset,0 18px 40px -12px rgba(0,0,0,.6)}
+.stat{background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(0,0,0,.45))}
+.card{background:linear-gradient(160deg,rgba(255,255,255,.035),rgba(0,0,0,.32))}
+.btn{background:rgba(255,255,255,.03);border-color:rgba(255,255,255,.12)}
+.btn:hover{background:rgba(242,193,78,.07)}
+.btn:not(.opt)::after{background:linear-gradient(105deg,transparent 35%,rgba(255,255,255,.1) 50%,transparent 65%)}
+.card::after{background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.05) 45%,rgba(122,215,255,.04) 52%,transparent 66%)}
+.btn.main{background:linear-gradient(135deg,#e8c565,#d9a92f);color:#1b2b1f}
+.btn.main:hover{background:linear-gradient(135deg,#efd07a,#e0b240)}
+.barra i{box-shadow:none}
+.barra.mala i{box-shadow:none}
+/* Figurita: menos destello */
+.fig{box-shadow:0 0 0 2px rgba(255,240,180,.25) inset,0 24px 50px -14px rgba(0,0,0,.75)}
+.fig::before{background:repeating-linear-gradient(115deg,rgba(255,255,255,.05) 0 2px,transparent 2px 14px)}
+.fig::after{background:linear-gradient(100deg,transparent,rgba(255,255,255,.22),transparent)}
+/* Escudos y botón de audio */
+.escudo{border-color:rgba(255,255,255,.3)}
+.escudo::after{background:linear-gradient(160deg,rgba(255,255,255,.14),transparent 50%)}
+.club-tag{color:#d4d9cd}
+#btn-audio{color:#c4ccbd;border-color:rgba(255,255,255,.1)}
+/* Luces del fondo animado más tenues */
+.f-luz{background:linear-gradient(180deg,rgba(255,244,200,.08),transparent 70%)}
+.f-luz.b{background:linear-gradient(180deg,rgba(122,215,255,.06),transparent 70%)}
+.f-cesped{background:repeating-linear-gradient(100deg,rgba(255,255,255,.015) 0 90px,transparent 90px 180px)}
+.f-vela{background:radial-gradient(ellipse at 50% 30%,rgba(3,10,7,.55),rgba(3,10,7,.9))}
