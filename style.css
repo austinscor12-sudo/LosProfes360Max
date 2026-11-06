@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&family=Figtree:wght@400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:wght@600;700&family=Figtree:wght@400;500;600;700&display=swap");
 :root{--cesped:#0b2417;--cesped2:#17402c;--linea:#2c6a4a;--tiza:#f2f5ef;--gris:#9db3a5;--oro:#f2c14e;--oro2:#ffdb7a;--error:#ff7b6b;--r:12px;--titulo:"Anton",Impact,"Arial Narrow Bold",sans-serif;--cond:"Barlow Condensed","Arial Narrow",sans-serif}
 *{box-sizing:border-box;margin:0}
 html{scrollbar-color:var(--linea) var(--cesped)}
