@@ -70,12 +70,11 @@ export function reproducir(el, m, res, ap, ctx = {}) {
     <div class="fila"><button class="btn" id="saltar">Saltar al final</button></div>`;
   const feed = el.querySelector("#feed"), marc = el.querySelector("#res"), min = el.querySelector("#min");
   let i = 0, timer = 0, acabado = false;
-  // Cancha animada. Si falla, o tenés las animaciones apagadas en Opciones, el partido se sigue viendo en texto.
+  // Cancha animada. Si falla se avisa arriba del partido; con las animaciones apagadas en Opciones, se ve solo el texto.
   let cancha = null;
-  const anim = !matchMedia("(prefers-reduced-motion: reduce)").matches && !document.documentElement.classList.contains("sin-anim");
-  if (anim) {
+  if (!document.documentElement.classList.contains("sin-anim")) {
     try { cancha = crearCancha(el.querySelector("#cancha"), { equipo: eq, rival: m.rival, pos: p.posicion, rol: res.rol }); }
-    catch (err) { console.error(err); cancha = null; }
+    catch (err) { console.error(err); cancha = null; el.querySelector("#cancha").innerHTML = `<p class="error">No se pudo armar la cancha: ${esc(err.message)}</p>`; }
   }
   const vel = () => cancha ? cancha.velocidad : 1;
   const mostrar = () => {
