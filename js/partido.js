@@ -11,6 +11,7 @@ import { temporadaTerminada } from "./fixture.js";
 import { guardarTodo } from "./firebase.js";
 import { abrirTabla } from "./tabla.js";
 import { hayPendientes } from "./seleccion.js";
+import { crearCancha } from "./cancha.js";
 
 // Después de un partido del club: si te convocaron, primero va la Selección; si no, cierre de temporada o seguir.
 const destino = p => hayPendientes(p) ? "carrera" : temporadaTerminada(p.calendario) ? "fin" : "carrera";
@@ -63,11 +64,20 @@ export function reproducir(el, m, res, ap, ctx = {}) {
     <h2>${esc(m.comp)} · ${esc(m.etiqueta)}</h2><p class="sub">${sede(m)}</p>
     <div class="marcador"><div class="eq">${esc(eq)}</div><div class="res" id="res">0 - 0</div><div class="eq">${esc(m.rival)}</div></div>
     <p class="minuto" id="min">Previa</p>
+    <div id="cancha"></div>
     <div id="resumen"></div>
     <div class="panel" id="feed"></div>
     <div class="fila"><button class="btn" id="saltar">Saltar al final</button></div>`;
   const feed = el.querySelector("#feed"), marc = el.querySelector("#res"), min = el.querySelector("#min");
-  let i = 0, timer = 0;
+  let i = 0, timer = 0, acabado = false;
+  // Cancha animada. Si falla, o tenés las animaciones apagadas en Opciones, el partido se sigue viendo en texto.
+  let cancha = null;
+  const anim = !matchMedia("(prefers-reduced-motion: reduce)").matches && !document.documentElement.classList.contains("sin-anim");
+  if (anim) {
+    try { cancha = crearCancha(el.querySelector("#cancha"), { equipo: eq, rival: m.rival, pos: p.posicion, rol: res.rol }); }
+    catch (err) { console.error(err); cancha = null; }
+  }
+  const vel = () => cancha ? cancha.velocidad : 1;
   const mostrar = () => {
     const e = res.eventos[i++];
     feed.insertAdjacentHTML("afterbegin", fila(e));
@@ -75,7 +85,8 @@ export function reproducir(el, m, res, ap, ctx = {}) {
     if (e.t === "gol" || e.t === "golR") { const mk = marc.closest(".marcador"); mk.classList.remove("flash", "flashR"); void mk.offsetWidth; mk.classList.add(e.t === "gol" ? "flash" : "flashR"); sonar(e.t === "gol" ? "gol" : "golR"); } min.textContent = e.t === "fin" ? "Final" : `Minuto ${fmtMin(e.m)}`;
   };
   const terminar = () => {
-    clearTimeout(timer);
+    acabado = true; clearTimeout(timer);
+    if (cancha) { cancha.parar(); el.querySelector("#cancha").hidden = true; }
     el.querySelector("#saltar").hidden = true;
     marc.textContent = `${res.golesMi} - ${res.golesRiv}`; min.textContent = res.penales ? `Final · penales ${res.penales.mi}-${res.penales.riv}` : "Final";
     el.querySelector("#resumen").innerHTML = resumen(p, m, res, ap, ctx);
@@ -85,13 +96,18 @@ export function reproducir(el, m, res, ap, ctx = {}) {
     r.querySelector("#ges").onclick = () => ir("gestion");
     window.scrollTo(0, 0);
   };
-  const paso = () => {
-    if (!el.isConnected) return;
+  const paso = async () => {
+    if (!el.isConnected || acabado) return;
     if (i >= res.eventos.length) return terminar();
-    const e = res.eventos[i]; mostrar();
-    timer = setTimeout(paso, e.t === "gol" || e.t === "golR" ? 1300 : 650);
+    const e = res.eventos[i];
+    // La cancha "actúa" la jugada y recién cuando termina se muestra el evento (así el gol suma cuando la pelota cruza la línea).
+    if (cancha) { try { await cancha.jugada(e); } catch (err) { console.error(err); } }
+    if (!el.isConnected || acabado) return;
+    mostrar();
+    const gol = e.t === "gol" || e.t === "golR";
+    timer = setTimeout(paso, (cancha ? (gol ? 900 : 450) : (gol ? 1300 : 650)) / vel());
   };
-  el.querySelector("#saltar").onclick = () => { while (i < res.eventos.length) mostrar(); terminar(); };
+  el.querySelector("#saltar").onclick = () => { acabado = true; clearTimeout(timer); if (cancha) cancha.parar(); while (i < res.eventos.length) mostrar(); terminar(); };
   paso();
 }
 
