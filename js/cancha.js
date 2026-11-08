@@ -359,7 +359,12 @@ class Cancha {
     if (this.fest) return false;
     const g = this.g;
     if (!g) return !this.tandaOn;
-    return g.fase === "recibe" ? p === g.F : g.fase === "cierre" && g.fin !== "gol";
+    switch (g.fase) {
+      case "toma": return p === g.carrier;
+      case "recibe": return p === g.F;
+      case "cierre": return g.fin !== "gol";
+      default: return false;
+    }
   }
   recoger() {
     const b = this.ball; if (b.dueno) return;
@@ -389,7 +394,7 @@ class Cancha {
     return new Promise(resolve => {
       let hecho = false;
       const fin = () => { if (hecho) return; hecho = true; clearTimeout(wd); resolve(); };
-      const wd = setTimeout(() => { this.abortar(); fin(); }, 12000 / this.velocidad);   // seguro: nunca deja colgado el partido
+      const wd = setTimeout(() => { this.abortar(); fin(); }, 16000 / this.velocidad);   // seguro: nunca deja colgado el partido
       this.libre().then(() => {
         if (this.parado) return fin();
         try { this.arrancar(e, fin); } catch (err) { console.error(err); this.g = null; fin(); }
@@ -513,24 +518,22 @@ class Cancha {
     const zona = { x: metaX - dirA * (plan.fin === "corte" ? az(24, 30) : az(22, 28)), y: clamp(GY + az(-12, 12), 14, 54) };
     const g = this.g = {
       tipo: "ataque", plan, fin: plan.fin, T, D, metaX, dirA, carrier, F, gk: D.jug.find(p => p.rol === "ARQ"),
-      fase: "avance", t: 0, tf: 0, zona, Q, espera: 0, listo: fin, quites: false, abre: null, Db: null, Dd: null, resuelto: false
+      fase: "toma", t: 0, tf: 0, zona, Q, espera: 0, listo: fin, quites: false, abre: null, Db: null, Dd: null, resuelto: false
     };
     if (plan.fin === "bloq") g.Db = (plan.lado === "R" && plan.yo && yoD) || cerca(outD, Q);
     if (plan.fin === "corte") g.Dd = (plan.lado === "R" && plan.yo && yoD) || cerca(outD.filter(p => p.rol === "DEF"), zona) || cerca(outD, zona);
-    this.dar(carrier);
   }
   armarPenal(plan, fin) {
     const T = this.eq[plan.lado === "M" ? 0 : 1], D = this.eq[T.idx ^ 1], b = this.ball;
     const metaX = T.dir === 1 ? L : 0, dirA = T.dir, out = T.jug.filter(p => p.rol !== "ARQ"), yoT = this.yoActivo(T);
     const F = plan.yo && /Se hace cargo/.test(plan.tx) && yoT ? yoT : (pick(out.filter(p => p.rol === "DEL")) || pick(out));
-    const spot = { x: metaX - dirA * 11, y: GY };
-    b.dueno = null; b.x = spot.x; b.y = spot.y; b.vx = b.vy = 0; b.lastTeam = T.idx;
+    const resto = out.filter(p => p !== F), cerca = (arr, ref) => arr.slice().sort((a, c) => d2(a, ref) - d2(c, ref))[0];
+    const carrier = cerca(resto.filter(p => p.rol !== "DEF"), b) || cerca(resto, b);   // al que le hacen la falta
+    const spot = { x: metaX - dirA * 11, y: GY }, Q = { x: metaX - dirA * az(14, 18), y: GY + az(-6, 6) };
     this.g = {
-      tipo: "ataque", plan, fin: null, T, D, metaX, dirA, carrier: F, F, gk: D.jug.find(p => p.rol === "ARQ"),
-      fase: "penal-espera", t: 0, tf: 0, penal: true, spot, listo: () => {}, quites: false, abre: null, resuelto: false
+      tipo: "ataque", plan, fin: null, T, D, metaX, dirA, carrier, F, gk: D.jug.find(p => p.rol === "ARQ"),
+      fase: "toma", t: 0, tf: 0, penal: true, pre: true, spot, Q, zona: Q, finPenal: fin, listo: () => {}, quites: false, abre: null, Db: null, Dd: null, resuelto: false
     };
-    this.cartel = { txt: "¡PENAL!", col: T.color, t: 0, dur: 1.4 };
-    this.despues(1.3, fin, true);
   }
   resolverPenal(e, fin) {
     const g = this.g, X = e.x || "";
@@ -556,15 +559,38 @@ class Cancha {
     const g = this.g, b = this.ball, { T, D, F, carrier, gk, metaX, dirA } = g;
     g.t += dt; g.tf += dt;
     switch (g.fase) {
+      case "toma": {
+        // El que va a atacar recupera la pelota jugando (no aparece de la nada).
+        if (b.dueno === carrier) { g.fase = "avance"; g.t = 0; break; }
+        if (!g.pedido) {
+          g.pedido = true;
+          const k = b.dueno;
+          if (k && dist(k, carrier) > 5) { this.patear(k, carrier.x, carrier.y, 26); this.receptor = carrier; this.recT = 2.5; }
+          else if (k || dist(b, carrier) < 3) this.dar(carrier);
+        }
+        carrier.tx = b.x + b.vx * .3; carrier.ty = b.y + b.vy * .3; carrier.vm = 1.25;
+        if (g.tf > 1.8) this.dar(carrier);
+        break;
+      }
+      case "falta": {
+        carrier.tx = carrier.x; carrier.ty = carrier.y;
+        if (g.tf > .7) {
+          b.dueno = null; b.x = g.spot.x; b.y = g.spot.y; b.vx = b.vy = 0; b.lastTeam = T.idx;
+          g.fase = "penal-espera"; g.tf = 0;
+          this.despues(.9, g.finPenal, true);
+        }
+        break;
+      }
       case "avance": {
         if (b.dueno !== carrier) this.dar(carrier);
-        const dest = F === carrier ? g.Q : g.zona;
+        const dest = F === carrier || g.pre ? g.Q : g.zona;
         carrier.tx = dest.x; carrier.ty = dest.y; carrier.vm = 1.05;
         if (F !== carrier) { F.tx = g.Q.x; F.ty = g.Q.y; F.vm = 1.1; }
         if (g.Db) { g.Db.tx = g.Q.x + dirA * 3; g.Db.ty = g.Q.y; g.Db.vm = 1.1; }
-        const lleg = F === carrier ? dist(carrier, g.Q) < 2.5 : (g.zona.x - carrier.x) * dirA <= 3.5;
-        if (lleg || g.t > 2.8) {
-          if (g.fin === "corte") { g.fase = "quite"; g.tf = 0; }
+        const lleg = F === carrier || g.pre ? dist(carrier, g.Q) < 2.5 : (g.zona.x - carrier.x) * dirA <= 3.5;
+        if (lleg || g.t > 2.4) {
+          if (g.pre) { g.fase = "falta"; g.tf = 0; this.cartel = { txt: "¡PENAL!", col: T.color, t: 0, dur: 1.6 }; }
+          else if (g.fin === "corte") { g.fase = "quite"; g.tf = 0; }
           else if (F === carrier) { g.fase = "apronte"; g.tf = 0; }
           else { this.pasar(carrier, F); g.fase = "recibe"; g.tf = 0; }
         }
@@ -580,7 +606,7 @@ class Cancha {
         F.tx = b.x; F.ty = b.y; F.vm = 1.1;
         if (g.Db) { g.Db.tx = F.x + dirA * 3; g.Db.ty = F.y; }
         if (b.dueno === F) { g.fase = "apronte"; g.tf = 0; }
-        else if (g.tf > 1.4) { this.dar(F); g.fase = "apronte"; g.tf = 0; }
+        else if (g.tf > 1.2) { this.dar(F); g.fase = "apronte"; g.tf = 0; }
         break;
       }
       case "penal-espera": {

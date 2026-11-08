@@ -265,12 +265,14 @@ body::before{z-index:0}
 
 /* ---- Celular ---- */
 .telefono{display:grid;place-items:center;margin:8px 0 10px}
-.tel-marco{position:relative;width:min(100%,370px);height:min(78vh,740px);min-height:520px;padding:11px;border-radius:52px;background:linear-gradient(145deg,#33383d,#0a0c0d);box-shadow:0 0 0 2px #50575d,0 0 0 5px #0c0e0f,0 34px 60px -10px rgba(0,0,0,.75)}
-.tel-marco::before{content:"";position:absolute;right:-7px;top:130px;width:4px;height:70px;border-radius:0 3px 3px 0;background:#50575d}
-.tel-marco::after{content:"";position:absolute;left:-7px;top:110px;width:4px;height:44px;border-radius:3px 0 0 3px;background:#50575d;box-shadow:0 60px 0 #50575d}
-.tel-pantalla{position:relative;height:100%;border-radius:42px;overflow:hidden;display:flex;flex-direction:column;background:linear-gradient(180deg,var(--eq1) -60%,#0c1612 34%,#08100c)}
-.tel-notch{position:absolute;top:9px;left:50%;transform:translateX(-50%);width:92px;height:26px;border-radius:20px;background:#000;z-index:3}
-.tel-estado{display:flex;justify-content:space-between;align-items:center;padding:13px 26px 4px;font-size:.8rem;font-weight:700;color:#e9ecE4}
+.tel-marco{position:relative;width:min(100%,370px);height:min(78vh,740px);min-height:520px;padding:9px;border-radius:56px;background:linear-gradient(145deg,#5d6167,#1c1e21 38%,#3e4146 62%,#17181a);box-shadow:0 0 0 1.5px #7d8188,0 0 0 3px #0b0c0d,0 34px 60px -10px rgba(0,0,0,.75),inset 0 0 0 1px rgba(255,255,255,.2)}
+/* Botones laterales del iPhone: derecha = encendido y control de cámara; izquierda = acción y volumen */
+.tel-marco::before{content:"";position:absolute;right:-5px;top:150px;width:4px;height:330px;border-radius:0 3px 3px 0;background:linear-gradient(#82868d 0 84px,transparent 84px 282px,#82868d 282px 330px)}
+.tel-marco::after{content:"";position:absolute;left:-5px;top:96px;width:4px;height:170px;border-radius:3px 0 0 3px;background:linear-gradient(#82868d 0 28px,transparent 28px 54px,#82868d 54px 106px,transparent 106px 118px,#82868d 118px 170px)}
+.tel-pantalla{position:relative;height:100%;border-radius:47px;overflow:hidden;display:flex;flex-direction:column;background:linear-gradient(180deg,var(--eq1) -60%,#0c1612 34%,#08100c);box-shadow:0 0 0 6px #000}
+/* Dynamic Island */
+.tel-notch{position:absolute;top:11px;left:50%;transform:translateX(-50%);width:112px;height:32px;border-radius:20px;background:radial-gradient(circle at 84% 50%,#16203a 0 4px,transparent 5px),#000;z-index:3}
+.tel-estado{display:flex;justify-content:space-between;align-items:center;padding:17px 30px 8px;font-size:.8rem;font-weight:700;color:#e9ecE4}
 .tel-app{flex:1;overflow:auto;padding:6px 14px 10px;scrollbar-width:thin}
 .tel-app h2{font-size:1.6rem;margin:4px 0 0}
 .tel-app .sub{margin-bottom:12px}
