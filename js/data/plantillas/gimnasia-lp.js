@@ -1,27 +1,24 @@
-// Gimnasia (LP)
-// Completá el DT y los nombres (podés agregar o borrar filas). Los primeros 11 jugadores son los titulares.
-// p = puesto: ARQ (arquero), DEF, MED o DEL.  Ejemplo: { n: "Leandro Paredes", p: "MED" }  (en el partido sale "L. Paredes")
-// Si ponés menos de 11 nombres, este equipo usa nombres al azar como siempre.
+// Gimnasia y Esgrima La Plata - Noviembre 2026
 export default {
-  dt: "",
+  dt: "Ariel Pereyra",
   jugadores: [
-    { n: "", p: "ARQ" },
-    { n: "", p: "DEF" },
-    { n: "", p: "DEF" },
-    { n: "", p: "DEF" },
-    { n: "", p: "DEF" },
-    { n: "", p: "MED" },
-    { n: "", p: "MED" },
-    { n: "", p: "MED" },
-    { n: "", p: "MED" },
-    { n: "", p: "DEL" },
-    { n: "", p: "DEL" },   // ← hasta acá son los 11 titulares; el resto, suplentes
-    { n: "", p: "ARQ" },
-    { n: "", p: "DEF" },
-    { n: "", p: "DEF" },
-    { n: "", p: "MED" },
-    { n: "", p: "MED" },
-    { n: "", p: "DEL" },
-    { n: "", p: "DEL" },
+    { n: "Harlen Castillo", p: "ARQ" },
+    { n: "Pablo Aguiar", p: "DEF" },
+    { n: "Germán Conti", p: "DEF" },
+    { n: "Enzo Martínez", p: "DEF" },
+    { n: "Matías Melluso", p: "DEF" },
+    { n: "Nicolás Barros Schelotto", p: "MED" },
+    { n: "Mateo Seoane", p: "MED" },
+    { n: "Ignacio Miramón", p: "MED" },
+    { n: "Lucas Janson", p: "MED" },
+    { n: "Agustín Auzmendi", p: "DEL" },
+    { n: "Jeremías Merlo", p: "DEL" },   // ← hasta acá son los 11 titulares; el resto, suplentes
+    { n: "Nelson Insfrán", p: "ARQ" },
+    { n: "Leonardo Morales", p: "DEF" },
+    { n: "Brian Blasi", p: "DEF" },
+    { n: "Augusto Max", p: "MED" },
+    { n: "Martin Fernández", p: "MED" },
+    { n: "David Salazar", p: "DEL" },
+    { n: "Franco Troyansky", p: "DEL" },
   ]
 };

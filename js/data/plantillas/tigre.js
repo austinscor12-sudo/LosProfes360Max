@@ -1,27 +1,23 @@
-// Tigre
-// Completá el DT y los nombres (podés agregar o borrar filas). Los primeros 11 jugadores son los titulares.
-// p = puesto: ARQ (arquero), DEF, MED o DEL.  Ejemplo: { n: "Leandro Paredes", p: "MED" }  (en el partido sale "L. Paredes")
-// Si ponés menos de 11 nombres, este equipo usa nombres al azar como siempre.
+// Tigre - Noviembre 2026
 export default {
-  dt: "",
+  dt: "Sebastián Domínguez",
   jugadores: [
-    { n: "", p: "ARQ" },
-    { n: "", p: "DEF" },
-    { n: "", p: "DEF" },
-    { n: "", p: "DEF" },
-    { n: "", p: "DEF" },
-    { n: "", p: "MED" },
-    { n: "", p: "MED" },
-    { n: "", p: "MED" },
-    { n: "", p: "MED" },
-    { n: "", p: "DEL" },
-    { n: "", p: "DEL" },   // ← hasta acá son los 11 titulares; el resto, suplentes
-    { n: "", p: "ARQ" },
-    { n: "", p: "DEF" },
-    { n: "", p: "DEF" },
-    { n: "", p: "MED" },
-    { n: "", p: "MED" },
-    { n: "", p: "DEL" },
-    { n: "", p: "DEL" },
+    { n: "Felipe Zenobio", p: "ARQ" },
+    { n: "Brian Leizza", p: "DEF" },
+    { n: "Nehuén Paz", p: "DEF" },
+    { n: "Martín Ortega", p: "DEF" },
+    { n: "Tomás Cavanagh", p: "DEF" },
+    { n: "Agustín Cardozo", p: "MED" },
+    { n: "Santiago González", p: "MED" },
+    { n: "Blas Armoa", p: "MED" },
+    { n: "Tomás Galván", p: "MED" },
+    { n: "Florián Monzón", p: "DEL" },
+    { n: "Eric Ramírez", p: "DEL" },   // ← 11 Titulares
+    { n: "Luka Funes", p: "ARQ" },
+    { n: "Gian Nardelli", p: "DEF" },
+    { n: "Pablo Minissale", p: "DEF" },
+    { n: "Sebastian Medina", p: "MED" },
+    { n: "Lorenzo Scipioni", p: "MED" },
+    { n: "Facundo Ferreyra", p: "DEL" },
   ]
 };

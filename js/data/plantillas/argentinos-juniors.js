@@ -1,27 +1,24 @@
-// Argentinos Juniors
-// Completá el DT y los nombres (podés agregar o borrar filas). Los primeros 11 jugadores son los titulares.
-// p = puesto: ARQ (arquero), DEF, MED o DEL.  Ejemplo: { n: "Leandro Paredes", p: "MED" }  (en el partido sale "L. Paredes")
-// Si ponés menos de 11 nombres, este equipo usa nombres al azar como siempre.
+// Argentinos Juniors - Noviembre 2026
 export default {
-  dt: "",
+  dt: "Nicolás Diez",
   jugadores: [
-    { n: "", p: "ARQ" },
-    { n: "", p: "DEF" },
-    { n: "", p: "DEF" },
-    { n: "", p: "DEF" },
-    { n: "", p: "DEF" },
-    { n: "", p: "MED" },
-    { n: "", p: "MED" },
-    { n: "", p: "MED" },
-    { n: "", p: "MED" },
-    { n: "", p: "DEL" },
-    { n: "", p: "DEL" },   // ← hasta acá son los 11 titulares; el resto, suplentes
-    { n: "", p: "ARQ" },
-    { n: "", p: "DEF" },
-    { n: "", p: "DEF" },
-    { n: "", p: "MED" },
-    { n: "", p: "MED" },
-    { n: "", p: "DEL" },
-    { n: "", p: "DEL" },
+    { n: "Brayan Cortés", p: "ARQ" },
+    { n: "Francisco Álvarez", p: "DEF" },
+    { n: "Franco Vázquez", p: "DEF" },
+    { n: "Alan Nuñez", p: "DEF" },
+    { n: "Claudio Bravo", p: "DEF" },
+    { n: "Federico Mancuello", p: "MED" },
+    { n: "Gabriel Florentín", p: "MED" },
+    { n: "Alan Lescano", p: "MED" },
+    { n: "Gino Infantino", p: "MED" },
+    { n: "Gastón Verón", p: "DEL" },
+    { n: "Tomás Molina", p: "DEL" },   // ← Titulares
+    { n: "Diego Rodríguez", p: "ARQ" },
+    { n: "Luciano Sánchez", p: "DEF" },
+    { n: "Erik Godoy", p: "DEF" },
+    { n: "Nicolás Oroz", p: "MED" },
+    { n: "Hernán López Muñoz", p: "MED" },
+    { n: "Iván Morales", p: "DEL" },
+    { n: "Matías Giménez", p: "DEL" },
   ]
 };

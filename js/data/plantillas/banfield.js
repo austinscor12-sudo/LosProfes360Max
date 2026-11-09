@@ -1,27 +1,24 @@
-// Banfield
-// Completá el DT y los nombres (podés agregar o borrar filas). Los primeros 11 jugadores son los titulares.
-// p = puesto: ARQ (arquero), DEF, MED o DEL.  Ejemplo: { n: "Leandro Paredes", p: "MED" }  (en el partido sale "L. Paredes")
-// Si ponés menos de 11 nombres, este equipo usa nombres al azar como siempre.
+// Banfield - Noviembre 2026
 export default {
-  dt: "",
+  dt: "Pedro Troglio",
   jugadores: [
-    { n: "", p: "ARQ" },
-    { n: "", p: "DEF" },
-    { n: "", p: "DEF" },
-    { n: "", p: "DEF" },
-    { n: "", p: "DEF" },
-    { n: "", p: "MED" },
-    { n: "", p: "MED" },
-    { n: "", p: "MED" },
-    { n: "", p: "MED" },
-    { n: "", p: "DEL" },
-    { n: "", p: "DEL" },   // ← hasta acá son los 11 titulares; el resto, suplentes
-    { n: "", p: "ARQ" },
-    { n: "", p: "DEF" },
-    { n: "", p: "DEF" },
-    { n: "", p: "MED" },
-    { n: "", p: "MED" },
-    { n: "", p: "DEL" },
-    { n: "", p: "DEL" },
+    { n: "Facundo Sanguinetti", p: "ARQ" },
+    { n: "Alejandro Maciel", p: "DEF" },
+    { n: "Gabriel Aranda", p: "DEF" },
+    { n: "Guillermo Enrique", p: "DEF" },
+    { n: "Mathías De Ritis", p: "DEF" },
+    { n: "Cristian Núñez", p: "MED" },
+    { n: "Yonathan Rodríguez", p: "MED" },
+    { n: "Ezequiel Cañete", p: "MED" },
+    { n: "Ignacio Rodríguez", p: "MED" },
+    { n: "Bruno Sepúlveda", p: "DEL" },
+    { n: "Leandro Garate", p: "DEL" },   // ← 11 Titulares
+    { n: "José Devecchi", p: "ARQ" },
+    { n: "Luciano Recalde", p: "DEF" },
+    { n: "Emanuel Insúa", p: "DEF" },
+    { n: "Jesús Soraire", p: "MED" },
+    { n: "Braian Galván", p: "MED" },
+    { n: "Juan Francisco Bisanz", p: "DEL" },
+    { n: "Agustín Obando", p: "DEL" },
   ]
 };

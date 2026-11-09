@@ -1,27 +1,24 @@
-// Newell's
+// Newell's Old Boys
 // Completá el DT y los nombres (podés agregar o borrar filas). Los primeros 11 jugadores son los titulares.
-// p = puesto: ARQ (arquero), DEF, MED o DEL.  Ejemplo: { n: "Leandro Paredes", p: "MED" }  (en el partido sale "L. Paredes")
-// Si ponés menos de 11 nombres, este equipo usa nombres al azar como siempre.
 export default {
-  dt: "",
+  dt: "Frank Darío Kudelka",
   jugadores: [
-    { n: "", p: "ARQ" },
-    { n: "", p: "DEF" },
-    { n: "", p: "DEF" },
-    { n: "", p: "DEF" },
-    { n: "", p: "DEF" },
-    { n: "", p: "MED" },
-    { n: "", p: "MED" },
-    { n: "", p: "MED" },
-    { n: "", p: "MED" },
-    { n: "", p: "DEL" },
-    { n: "", p: "DEL" },   // ← hasta acá son los 11 titulares; el resto, suplentes
-    { n: "", p: "ARQ" },
-    { n: "", p: "DEF" },
-    { n: "", p: "DEF" },
-    { n: "", p: "MED" },
-    { n: "", p: "MED" },
-    { n: "", p: "DEL" },
-    { n: "", p: "DEL" },
+    { n: "Gabriel Arias", p: "ARQ" },
+    { n: "Armando Méndez", p: "DEF" },
+    { n: "Gustavo Velázquez", p: "DEF" },
+    { n: "saúl Salcedo", p: "DEF" },
+    { n: "Ángelo Martino", p: "DEF" },
+    { n: "Rodrigo Fernández Cedrés", p: "MED" },
+    { n: "Tomás Pérez", p: "MED" },
+    { n: "Éban Banega", p: "MED" },
+    { n: "Matko Miljevic", p: "MED" },
+    { n: "Juan Ignacio Ramírez", p: "DEL" },
+    { n: "Walter Núñez", p: "DEL" },   // ← Titulares
+    { n: "Ramiro Macagno", p: "ARQ" },
+    { n: "Ian Glavinovich", p: "DEF" },
+    { n: "Martín Luciano", p: "DEF" },
+    { n: "Valentín Cardozo", p: "MED" },
+    { n: "Lucas Besozzi", p: "DEL" },
+    { n: "Mateo Silvetti", p: "DEL" },
   ]
 };

@@ -1,27 +1,24 @@
-// Platense
-// Completá el DT y los nombres (podés agregar o borrar filas). Los primeros 11 jugadores son los titulares.
-// p = puesto: ARQ (arquero), DEF, MED o DEL.  Ejemplo: { n: "Leandro Paredes", p: "MED" }  (en el partido sale "L. Paredes")
-// Si ponés menos de 11 nombres, este equipo usa nombres al azar como siempre.
+// Platense - Noviembre 2026
 export default {
-  dt: "",
+  dt: "Sergio Gómez",
   jugadores: [
-    { n: "", p: "ARQ" },
-    { n: "", p: "DEF" },
-    { n: "", p: "DEF" },
-    { n: "", p: "DEF" },
-    { n: "", p: "DEF" },
-    { n: "", p: "MED" },
-    { n: "", p: "MED" },
-    { n: "", p: "MED" },
-    { n: "", p: "MED" },
-    { n: "", p: "DEL" },
-    { n: "", p: "DEL" },   // ← hasta acá son los 11 titulares; el resto, suplentes
-    { n: "", p: "ARQ" },
-    { n: "", p: "DEF" },
-    { n: "", p: "DEF" },
-    { n: "", p: "MED" },
-    { n: "", p: "MED" },
-    { n: "", p: "DEL" },
-    { n: "", p: "DEL" },
+    { n: "Juan Pablo Cozzani", p: "ARQ" },
+    { n: "Ignacio Vázquez", p: "DEF" },
+    { n: "Gastón Suso", p: "DEF" },
+    { n: "Bautista Barros Schelotto", p: "DEF" },
+    { n: "Sasha Marcich", p: "DEF" },
+    { n: "Leonel Picco", p: "MED" },
+    { n: "Carlos Villalba", p: "MED" },
+    { n: "Fernando Juárez", p: "MED" },
+    { n: "Vicente Taborda", p: "MED" },
+    { n: "Ronaldo Martínez", p: "DEL" },
+    { n: "Mateo Pellegrino", p: "DEL" },   // ← Titulares
+    { n: "Joaquín Blázquez", p: "ARQ" },
+    { n: "Juan Pablo Pignani", p: "DEF" },
+    { n: "Gonzalo Valdivia", p: "DEF" },
+    { n: "Guido Mainero", p: "MED" },
+    { n: "Franco Baldassarra", p: "MED" },
+    { n: "Ignacio Schor", p: "DEL" },
+    { n: "Augusto Lotti", p: "DEL" },
   ]
 };

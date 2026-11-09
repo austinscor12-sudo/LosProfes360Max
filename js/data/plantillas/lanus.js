@@ -1,27 +1,24 @@
-// Lanús
-// Completá el DT y los nombres (podés agregar o borrar filas). Los primeros 11 jugadores son los titulares.
-// p = puesto: ARQ (arquero), DEF, MED o DEL.  Ejemplo: { n: "Leandro Paredes", p: "MED" }  (en el partido sale "L. Paredes")
-// Si ponés menos de 11 nombres, este equipo usa nombres al azar como siempre.
+// Lanús - Noviembre 2026
 export default {
-  dt: "",
+  dt: "Mauricio Pellegrino",
   jugadores: [
-    { n: "", p: "ARQ" },
-    { n: "", p: "DEF" },
-    { n: "", p: "DEF" },
-    { n: "", p: "DEF" },
-    { n: "", p: "DEF" },
-    { n: "", p: "MED" },
-    { n: "", p: "MED" },
-    { n: "", p: "MED" },
-    { n: "", p: "MED" },
-    { n: "", p: "DEL" },
-    { n: "", p: "DEL" },   // ← hasta acá son los 11 titulares; el resto, suplentes
-    { n: "", p: "ARQ" },
-    { n: "", p: "DEF" },
-    { n: "", p: "DEF" },
-    { n: "", p: "MED" },
-    { n: "", p: "MED" },
-    { n: "", p: "DEL" },
-    { n: "", p: "DEL" },
+    { n: "Nahuel Losada", p: "ARQ" },
+    { n: "Carlos Izquierdoz", p: "DEF" },
+    { n: "Ezequiel Muñoz", p: "DEF" },
+    { n: "Nicolás Morgantini", p: "DEF" },
+    { n: "Julio Soler", p: "DEF" },
+    { n: "Gonzalo Pérez", p: "MED" },
+    { n: "Raúl Loaiza", p: "MED" },
+    { n: "Felipe Peña Biafore", p: "MED" },
+    { n: "Marcelino Moreno", p: "MED" },
+    { n: "Eduardo Salvio", p: "DEL" },
+    { n: "Walter Bou", p: "DEL" },   // ← 11 Titulares
+    { n: "Alan Aguerre", p: "ARQ" },
+    { n: "Nery Domínguez", p: "DEF" },
+    { n: "Braian Aguirre", p: "DEF" },
+    { n: "Ramiro Carrera", p: "MED" },
+    { n: "Luciano Boggio", p: "MED" },
+    { n: "Dylan Aquino", p: "DEL" },
+    { n: "Leandro Díaz", p: "DEL" },
   ]
 };

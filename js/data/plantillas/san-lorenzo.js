@@ -1,27 +1,24 @@
-// San Lorenzo
-// Completá el DT y los nombres (podés agregar o borrar filas). Los primeros 11 jugadores son los titulares.
-// p = puesto: ARQ (arquero), DEF, MED o DEL.  Ejemplo: { n: "Leandro Paredes", p: "MED" }  (en el partido sale "L. Paredes")
-// Si ponés menos de 11 nombres, este equipo usa nombres al azar como siempre.
+// San Lorenzo - Noviembre 2026
 export default {
-  dt: "",
+  dt: "Néstor Gorosito",
   jugadores: [
-    { n: "", p: "ARQ" },
-    { n: "", p: "DEF" },
-    { n: "", p: "DEF" },
-    { n: "", p: "DEF" },
-    { n: "", p: "DEF" },
-    { n: "", p: "MED" },
-    { n: "", p: "MED" },
-    { n: "", p: "MED" },
-    { n: "", p: "MED" },
-    { n: "", p: "DEL" },
-    { n: "", p: "DEL" },   // ← hasta acá son los 11 titulares; el resto, suplentes
-    { n: "", p: "ARQ" },
-    { n: "", p: "DEF" },
-    { n: "", p: "DEF" },
-    { n: "", p: "MED" },
-    { n: "", p: "MED" },
-    { n: "", p: "DEL" },
-    { n: "", p: "DEL" },
+    { n: "Facundo Altamirano", p: "ARQ" },
+    { n: "Jhohan Romaña", p: "DEF" },
+    { n: "Guzmán Corujo", p: "DEF" },
+    { n: "Gonzalo Luján", p: "DEF" },
+    { n: "Elias Báez", p: "DEF" },
+    { n: "Eric Remedi", p: "MED" },
+    { n: "Santiago Sosa", p: "MED" },
+    { n: "Iker Muniain", p: "MED" },
+    { n: "Nahuel Bustos", p: "MED" },
+    { n: "Matías Reali", p: "DEL" },
+    { n: "Alexis Cuello", p: "DEL" },   // ← 11 Titulares
+    { n: "Orlando Gill", p: "ARQ" },
+    { n: "Ramiro Pedroza", p: "DEF" },
+    { n: "Daniel Herrera", p: "DEF" },
+    { n: "Elián Irala", p: "MED" },
+    { n: "Facundo Gulli", p: "MED" },
+    { n: "Ezequiel Cerutti", p: "DEL" },
+    { n: "Andrés Vombergar", p: "DEL" },
   ]
 };

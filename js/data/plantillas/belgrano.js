@@ -1,27 +1,25 @@
-// Belgrano
+// Belgrano de Córdoba
 // Completá el DT y los nombres (podés agregar o borrar filas). Los primeros 11 jugadores son los titulares.
-// p = puesto: ARQ (arquero), DEF, MED o DEL.  Ejemplo: { n: "Leandro Paredes", p: "MED" }  (en el partido sale "L. Paredes")
-// Si ponés menos de 11 nombres, este equipo usa nombres al azar como siempre.
 export default {
-  dt: "",
+  dt: "Ricardo Zielinski",
   jugadores: [
-    { n: "", p: "ARQ" },
-    { n: "", p: "DEF" },
-    { n: "", p: "DEF" },
-    { n: "", p: "DEF" },
-    { n: "", p: "DEF" },
-    { n: "", p: "MED" },
-    { n: "", p: "MED" },
-    { n: "", p: "MED" },
-    { n: "", p: "MED" },
-    { n: "", p: "DEL" },
-    { n: "", p: "DEL" },   // ← hasta acá son los 11 titulares; el resto, suplentes
-    { n: "", p: "ARQ" },
-    { n: "", p: "DEF" },
-    { n: "", p: "DEF" },
-    { n: "", p: "MED" },
-    { n: "", p: "MED" },
-    { n: "", p: "DEL" },
-    { n: "", p: "DEL" },
+    { n: "Lucas Vicentini", p: "ARQ" },
+    { n: "Mariano Morales", p: "DEF" },
+    { n: "Alejandro Maldonado", p: "DEF" },
+    { n: "Stefano Callegari", p: "DEF" },
+    { n: "Gabriel Sporle", p: "DEF" },
+    { n: "Santiago Longo", p: "MED" },
+    { n: "Lucas Zelarayán", p: "MED" },
+    { n: "Francisco González Metilli", p: "MED" },
+    { n: "Emiliano Rigoni", p: "MED" },
+    { n: "Nicolás Fernández", p: "DEL" },
+    { n: "Lucas Passerini", p: "DEL" },   // ← Titulares
+    { n: "Juan Espínola", p: "ARQ" },
+    { n: "Aníbal Leguizamón", p: "DEF" },
+    { n: "Rafael Delgado", p: "DEF" },
+    { n: "Esteban Rolón", p: "MED" },
+    { n: "Facundo Quignón", p: "MED" },
+    { n: "Bryan Reyna", p: "DEL" },
+    { n: "Pablo Chavarría", p: "DEL" },
   ]
 };

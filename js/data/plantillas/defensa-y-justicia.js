@@ -1,27 +1,24 @@
-// Defensa y Justicia
-// Completá el DT y los nombres (podés agregar o borrar filas). Los primeros 11 jugadores son los titulares.
-// p = puesto: ARQ (arquero), DEF, MED o DEL.  Ejemplo: { n: "Leandro Paredes", p: "MED" }  (en el partido sale "L. Paredes")
-// Si ponés menos de 11 nombres, este equipo usa nombres al azar como siempre.
+// Defensa y Justicia - Noviembre 2026
 export default {
-  dt: "",
+  dt: "Pablo De Muner",
   jugadores: [
-    { n: "", p: "ARQ" },
-    { n: "", p: "DEF" },
-    { n: "", p: "DEF" },
-    { n: "", p: "DEF" },
-    { n: "", p: "DEF" },
-    { n: "", p: "MED" },
-    { n: "", p: "MED" },
-    { n: "", p: "MED" },
-    { n: "", p: "MED" },
-    { n: "", p: "DEL" },
-    { n: "", p: "DEL" },   // ← hasta acá son los 11 titulares; el resto, suplentes
-    { n: "", p: "ARQ" },
-    { n: "", p: "DEF" },
-    { n: "", p: "DEF" },
-    { n: "", p: "MED" },
-    { n: "", p: "MED" },
-    { n: "", p: "DEL" },
-    { n: "", p: "DEL" },
+    { n: "Enrique Bologna", p: "ARQ" },
+    { n: "Santiago Ramos Mingo", p: "DEF" },
+    { n: "Lucas Ferreira", p: "DEF" },
+    { n: "Emanuele Aguilera", p: "DEF" },
+    { n: "Alexis Soto", p: "DEF" },
+    { n: "Kevin Gutiérrez", p: "MED" },
+    { n: "Benjamin Schamine", p: "MED" },
+    { n: "César Pérez", p: "MED" },
+    { n: "Aaron Molinas", p: "MED" },
+    { n: "Abiel Osorio", p: "DEL" },
+    { n: "Juan Miritello", p: "DEL" },   // ← 11 Titulares
+    { n: "Cristopher Fiermarin", p: "ARQ" },
+    { n: "Ezequiel Cannavo", p: "DEF" },
+    { n: "Darío Cáceres", p: "DEF" },
+    { n: "Julian López", p: "MED" },
+    { n: "Gabriel Alanís", p: "MED" },
+    { n: "Matías Ramírez", p: "DEL" },
+    { n: "Rodrigo Bogarín", p: "DEL" },
   ]
 };

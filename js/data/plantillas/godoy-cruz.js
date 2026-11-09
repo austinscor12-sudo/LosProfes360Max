@@ -1,27 +1,23 @@
-// Godoy Cruz
-// Completá el DT y los nombres (podés agregar o borrar filas). Los primeros 11 jugadores son los titulares.
-// p = puesto: ARQ (arquero), DEF, MED o DEL.  Ejemplo: { n: "Leandro Paredes", p: "MED" }  (en el partido sale "L. Paredes")
-// Si ponés menos de 11 nombres, este equipo usa nombres al azar como siempre.
+// Godoy Cruz - Noviembre 2026
 export default {
-  dt: "",
+  dt: "Daniel Oldrá",
   jugadores: [
-    { n: "", p: "ARQ" },
-    { n: "", p: "DEF" },
-    { n: "", p: "DEF" },
-    { n: "", p: "DEF" },
-    { n: "", p: "DEF" },
-    { n: "", p: "MED" },
-    { n: "", p: "MED" },
-    { n: "", p: "MED" },
-    { n: "", p: "MED" },
-    { n: "", p: "DEL" },
-    { n: "", p: "DEL" },   // ← hasta acá son los 11 titulares; el resto, suplentes
-    { n: "", p: "ARQ" },
-    { n: "", p: "DEF" },
-    { n: "", p: "DEF" },
-    { n: "", p: "MED" },
-    { n: "", p: "MED" },
-    { n: "", p: "DEL" },
-    { n: "", p: "DEL" },
+    { n: "Franco Petroli", p: "ARQ" },
+    { n: "Pier Barrios", p: "DEF" },
+    { n: "Federico Rasmussen", p: "DEF" },
+    { n: "Lucas Arce", p: "DEF" },
+    { n: "Thomas Galdames", p: "DEF" },
+    { n: "Bruno Leyes", p: "MED" },
+    { n: "Vicente Poggi", p: "MED" },
+    { n: "Nicolás Fernández", p: "MED" },
+    { n: "Juan Bautista Cejas", p: "MED" },
+    { n: "Facundo Altamira", p: "DEL" },
+    { n: "Tomás Badaloni", p: "DEL" },   // ← 11 Titulares
+    { n: "Roberto Ramírez", p: "ARQ" },
+    { n: "Manuel Guillén", p: "DEF" },
+    { n: "Braian Salvareschi", p: "DEF" },
+    { n: "Julian Eseiza", p: "MED" },
+    { n: "Gastón Moreyra", p: "MED" },
+    { n: "Salomón Rodríguez", p: "DEL" },
   ]
 };

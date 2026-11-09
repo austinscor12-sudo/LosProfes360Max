@@ -1,27 +1,24 @@
-// Estudiantes (LP)
-// Completá el DT y los nombres (podés agregar o borrar filas). Los primeros 11 jugadores son los titulares.
-// p = puesto: ARQ (arquero), DEF, MED o DEL.  Ejemplo: { n: "Leandro Paredes", p: "MED" }  (en el partido sale "L. Paredes")
-// Si ponés menos de 11 nombres, este equipo usa nombres al azar como siempre.
+// Estudiantes de La Plata - Noviembre 2026
 export default {
-  dt: "",
+  dt: "Julio Vaccari",
   jugadores: [
-    { n: "", p: "ARQ" },
-    { n: "", p: "DEF" },
-    { n: "", p: "DEF" },
-    { n: "", p: "DEF" },
-    { n: "", p: "DEF" },
-    { n: "", p: "MED" },
-    { n: "", p: "MED" },
-    { n: "", p: "MED" },
-    { n: "", p: "MED" },
-    { n: "", p: "DEL" },
-    { n: "", p: "DEL" },   // ← hasta acá son los 11 titulares; el resto, suplentes
-    { n: "", p: "ARQ" },
-    { n: "", p: "DEF" },
-    { n: "", p: "DEF" },
-    { n: "", p: "MED" },
-    { n: "", p: "MED" },
-    { n: "", p: "DEL" },
-    { n: "", p: "DEL" },
+    { n: "Fernando Muslera", p: "ARQ" },
+    { n: "Eros Mancuso", p: "DEF" },
+    { n: "Leandro González Pirez", p: "DEF" },
+    { n: "Marcos Rojo", p: "DEF" },
+    { n: "Gastón Benedetti", p: "DEF" },
+    { n: "Ezequiel Piovi", p: "MED" },
+    { n: "Alexis Castro", p: "MED" },
+    { n: "Tiago Palacios", p: "MED" },
+    { n: "Joaquín Tobio Burgos", p: "MED" },
+    { n: "Joaquín Correa", p: "DEL" },
+    { n: "Guido Carrillo", p: "DEL" },   // ← hasta acá son los 11 titulares; el resto, suplentes
+    { n: "Fabricio Iacovich", p: "ARQ" },
+    { n: "Santiago Flores", p: "DEF" },
+    { n: "Nicolas Fernández", p: "DEF" },
+    { n: "Baltasar Rodríguez", p: "MED" },
+    { n: "Bautista Kociubinski", p: "MED" },
+    { n: "Edwuin Cetré", p: "DEL" },
+    { n: "Matías Contrera", p: "DEL" },
   ]
 };

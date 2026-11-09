@@ -1,27 +1,24 @@
-// Deportivo Riestra
-// Completá el DT y los nombres (podés agregar o borrar filas). Los primeros 11 jugadores son los titulares.
-// p = puesto: ARQ (arquero), DEF, MED o DEL.  Ejemplo: { n: "Leandro Paredes", p: "MED" }  (en el partido sale "L. Paredes")
-// Si ponés menos de 11 nombres, este equipo usa nombres al azar como siempre.
+// Deportivo Riestra - Noviembre 2026
 export default {
-  dt: "",
+  dt: "Gustavo Benítez",
   jugadores: [
-    { n: "", p: "ARQ" },
-    { n: "", p: "DEF" },
-    { n: "", p: "DEF" },
-    { n: "", p: "DEF" },
-    { n: "", p: "DEF" },
-    { n: "", p: "MED" },
-    { n: "", p: "MED" },
-    { n: "", p: "MED" },
-    { n: "", p: "MED" },
-    { n: "", p: "DEL" },
-    { n: "", p: "DEL" },   // ← hasta acá son los 11 titulares; el resto, suplentes
-    { n: "", p: "ARQ" },
-    { n: "", p: "DEF" },
-    { n: "", p: "DEF" },
-    { n: "", p: "MED" },
-    { n: "", p: "MED" },
-    { n: "", p: "DEL" },
-    { n: "", p: "DEL" },
+    { n: "Ignacio Arce", p: "ARQ" },
+    { n: "Alan Barrionuevo", p: "DEF" },
+    { n: "Nicolas Caro Torres", p: "DEF" },
+    { n: "Yeison Murillo", p: "DEF" },
+    { n: "Pedro Ramírez", p: "DEF" },
+    { n: "Jonatan Goitía", p: "MED" },
+    { n: "Milton Céliz", p: "MED" },
+    { n: "Pablo Monje", p: "MED" },
+    { n: "Walter Rodríguez", p: "MED" },
+    { n: "Antony Alonso", p: "DEL" },
+    { n: "Jonathan Herrera", p: "DEL" },   // ← hasta acá son los 11 titulares; el resto, suplentes
+    { n: "Jaime Barceló", p: "ARQ" },
+    { n: "Gustavo Benítez", p: "DEF" },
+    { n: "Tomas Villoldo", p: "DEF" },
+    { n: "Braian Sánchez", p: "MED" },
+    { n: "Leonardo Landriel", p: "MED" },
+    { n: "Alexander Díaz", p: "DEL" },
+    { n: "Gustavo Fernández", p: "DEL" },
   ]
 };
