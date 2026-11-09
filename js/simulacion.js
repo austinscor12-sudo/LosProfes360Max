@@ -1,6 +1,7 @@
 // Motor de simulación de partidos: minuto a minuto, con eventos, estadísticas y nota del jugador.
 import { fuerzaEquipo, nivelPlantel, APELLIDOS, INICIALES } from "./data/fuerza.js";
 import { generarLesion, probTitular } from "./evolucion.js";
+import { plantillaDe } from "./plantillas.js";
 
 const az = (a, b) => a + Math.random() * (b - a);
 const ent = (a, b) => Math.floor(az(a, b + 1));
@@ -31,6 +32,10 @@ const resultado = g => {
 export function simularPartido({ equipo, rival, local, p, rol, copa, copaNombre }) {
   const j = p.jugador, A = p.atributos, pos = p.posicion;
   const yo = j.apodo || j.apellido;
+  // Nombres de compañeros y rivales: salen de la plantilla del equipo (js/data/plantillas/) o, si no hay, al azar.
+  const plM = plantillaDe(equipo), plR = plantillaDe(rival);
+  const delOnce = pl => pl && pl.jugadores.length ? () => pick(pl.jugadores.slice(0, 11).filter(x => x.p !== "ARQ")).c : nombre;
+  const nMi = delOnce(plM), nRiv = delOnce(plR), dtMi = (plM && plM.dt) || "El DT";
   const fat = p.fatiga || 0, forma = p.forma ?? 60;
   const rend = (1 + (forma - 60) / 400) * (1 - Math.max(0, fat - 60) / 200);
   const fM0 = fuerzaEquipo(equipo) + (local === true ? 3 : 0), fR0 = fuerzaEquipo(rival) + (local === false ? 3 : 0);
@@ -70,7 +75,7 @@ export function simularPartido({ equipo, rival, local, p, rol, copa, copaNombre 
   const penalMio = (m, en) => {
     const toma = en && pos !== "ARQ" && prob(pos === "DEL" ? .6 : pos === "MED" ? .35 : .1);
     push(m, "penal", `¡Penal para ${equipo}!${toma ? ` Se hace cargo ${yo}.` : ""}`, toma);
-    const quien = toma ? yo : nombre();
+    const quien = toma ? yo : nMi();
     const pc = toma ? lim((.7 + (A.tiro - 55) * .004) * rend, .5, .93) : .76;
     st.remM++; if (toma) jug.remates++;
     if (prob(pc)) {
@@ -103,11 +108,11 @@ export function simularPartido({ equipo, rival, local, p, rol, copa, copaNombre 
     let g = lim(.075 * Math.exp((fm - fr) / 35), .03, .3);
     if (tira) g *= .6 + (pos === "DEF" ? (A.fisico + A.tiro) / 2 : A.tiro) * rend / 100 * .8;
     if (crea) g *= .8 + A.pase * rend / 100 * .4;
-    const r = resultado(g), mate = nombre();
+    const r = resultado(g), mate = nMi();
     if (r !== "nada") { st.remM++; if (r === "gol" || r === "ataj") st.arcoM++; }
     if (r === "gol") {
       gM++;
-      if (tira) { jug.remates++; jug.alArco++; jug.goles++; nt += 1.1; const a = prob(.7) ? nombre() : null; push(m, "gol", `¡GOOOL de ${equipo}! ${yo} ${pick(DEFINE)}.${a ? ` Asistencia de ${a}.` : " Gol de jugada individual."}`, true); }
+      if (tira) { jug.remates++; jug.alArco++; jug.goles++; nt += 1.1; const a = prob(.7) ? nMi() : null; push(m, "gol", `¡GOOOL de ${equipo}! ${yo} ${pick(DEFINE)}.${a ? ` Asistencia de ${a}.` : " Gol de jugada individual."}`, true); }
       else if (crea) { jug.pasesClave++; jug.asist++; nt += .7; push(m, "gol", `¡GOL de ${equipo}! ${mate} la empuja tras un pase exquisito de ${yo}.`, true); }
       else push(m, "gol", `¡Gol de ${equipo}! ${mate} ${pick(DEFINE)}.`);
       return;
@@ -146,7 +151,7 @@ export function simularPartido({ equipo, rival, local, p, rol, copa, copaNombre 
     if (r !== "nada") { st.remR++; if (r === "gol" || r === "ataj") st.arcoR++; }
     if (r === "gol") {
       gR++;
-      let txt = `Gol de ${rival}: ${nombre()} ${pick(DEFINE)}.`;
+      let txt = `Gol de ${rival}: ${nRiv()} ${pick(DEFINE)}.`;
       if (en) {
         jug.golesContra++;
         if (pos === "ARQ") { nt -= .3; if (prob(.1) && A.manos < 65) { jug.errores++; nt -= .3; txt += ` Se te escapó de las manos, ${yo}.`; } else txt += ` No pudiste hacer nada, ${yo}.`; }
@@ -156,7 +161,7 @@ export function simularPartido({ equipo, rival, local, p, rol, copa, copaNombre 
       push(m, "golR", txt, en && (pos === "ARQ" || vencido));
     } else if (r === "ataj") {
       if (en && pos === "ARQ") { jug.atajadas++; nt += .3; push(m, "ataj", pick([`¡Atajadón de ${yo}! Vuela y la saca al córner.`, `${yo} responde abajo y evita el gol.`, `Remate de ${rival} y ${yo} la controla sin problemas.`]), true); }
-      else if (prob(.25)) push(m, "ataj", `El arquero de ${equipo} ataja el remate de ${nombre()}.`);
+      else if (prob(.25)) push(m, "ataj", `El arquero de ${equipo} ataja el remate de ${nRiv()}.`);
     } else if (r === "palo") push(m, "palo", `¡Palo! ${rival} casi marca: el remate pega en el travesaño.`, en && pos === "ARQ");
     else if (r === "bloq" && en && pos === "DEF" && prob(.5)) { jug.bloqueos++; nt += .12; push(m, "corte", `${yo} se tira y bloquea el remate de ${rival}.`, true); }
   };
@@ -171,15 +176,15 @@ export function simularPartido({ equipo, rival, local, p, rol, copa, copaNombre 
     const m = s.m;
     switch (s.k) {
       case "descanso": push(45, "info", `Termina el primer tiempo: ${equipo} ${gM} - ${gR} ${rival}.`); break;
-      case "entra": push(m, "cambio", `Ingresás vos, ${yo}, por ${nombre()}. A dejar todo en la cancha.`, true); break;
-      case "sale": if (m === fin) push(m, "cambio", `Te reemplazan: sale ${yo}, entra ${nombre()}. El DT te aplaude.`, true); break;
+      case "entra": push(m, "cambio", `Ingresás vos, ${yo}, por ${nMi()}. A dejar todo en la cancha.`, true); break;
+      case "sale": if (m === fin) push(m, "cambio", `Te reemplazan: sale ${yo}, entra ${nMi()}. ${dtMi} te aplaude.`, true); break;
       case "amarilla": if (enCancha(m)) { jug.amarilla = true; nt -= .2; push(m, "amarilla", `Amarilla para ${yo} por una infracción.`, true); } break;
       case "roja": if (enCancha(m)) { jug.roja = true; nt -= 1.5; fin = m; rojasM++; push(m, "roja", `¡Roja directa para ${yo}! ${equipo} se queda con uno menos.`, true); } break;
       case "lesion": if (enCancha(m)) { lesion = generarLesion(); fin = m; push(m, "lesion", `${yo} queda tendido en el piso: ${lesion.nombre.toLowerCase()}. Tiene que salir.`, true); } break;
-      case "rojaM": if (rojasM < 2) { rojasM++; push(m, "roja", `Expulsan a ${nombre()} de ${equipo}. Juegan con uno menos.`); } break;
-      case "rojaR": if (rojasR < 2) { rojasR++; push(m, "roja", `Expulsan a ${nombre()} de ${rival}. ${equipo} tiene un hombre más.`); } break;
-      case "amarillaM": push(m, "amarilla", `Amarilla para ${nombre()} (${equipo}).`); break;
-      case "amarillaR": push(m, "amarilla", `Amarilla para ${nombre()} (${rival}).`); break;
+      case "rojaM": if (rojasM < 2) { rojasM++; push(m, "roja", `Expulsan a ${nMi()} de ${equipo}. Juegan con uno menos.`); } break;
+      case "rojaR": if (rojasR < 2) { rojasR++; push(m, "roja", `Expulsan a ${nRiv()} de ${rival}. ${equipo} tiene un hombre más.`); } break;
+      case "amarillaM": push(m, "amarilla", `Amarilla para ${nMi()} (${equipo}).`); break;
+      case "amarillaR": push(m, "amarilla", `Amarilla para ${nRiv()} (${rival}).`); break;
       default: {
         const fm = fM0 * (1 - .1 * rojasM) * (1 + .05 * rojasR), fr = fR0 * (1 - .1 * rojasR) * (1 + .05 * rojasM);
         const pA = lim(fm ** 2 / (fm ** 2 + fr ** 2) + (gM < gR ? .03 : gM > gR ? -.02 : 0), .12, .88);
@@ -201,12 +206,12 @@ export function simularPartido({ equipo, rival, local, p, rol, copa, copaNombre 
       const okM = prob(mio ? lim((.7 + (A.tiro - 55) * .004) * rend, .5, .93) : .75);
       if (okM) a++;
       if (mio) { jug.remates++; if (okM) { jug.goles++; jug.alArco++; nt += .6; } else nt -= .6; }
-      push(200 + i, okM ? "gol" : "tiro", `${equipo}: ${mio ? yo : nombre()} ${okM ? "convierte" : "falla"} su penal. (${a}-${b})`, mio);
+      push(200 + i, okM ? "gol" : "tiro", `${equipo}: ${mio ? yo : nMi()} ${okM ? "convierte" : "falla"} su penal. (${a}-${b})`, mio);
       const atajado = yoAtajo && prob(lim(.22 + (A.reflejos - 50) * .003, .1, .4));
       const okR = !atajado && prob(.75);
       if (okR) b++;
       if (atajado) { jug.atajadas++; nt += .6; }
-      push(200 + i, okR ? "golR" : atajado ? "ataj" : "tiro", atajado ? `¡Lo atajó ${yo}! (${a}-${b})` : `${rival}: ${nombre()} ${okR ? "convierte" : "falla"} su penal. (${a}-${b})`, atajado);
+      push(200 + i, okR ? "golR" : atajado ? "ataj" : "tiro", atajado ? `¡Lo atajó ${yo}! (${a}-${b})` : `${rival}: ${nRiv()} ${okR ? "convierte" : "falla"} su penal. (${a}-${b})`, atajado);
       if (i <= 5 && (a > b + (5 - i) || b > a + (5 - i))) break;
     }
     penales = { mi: a, riv: b };

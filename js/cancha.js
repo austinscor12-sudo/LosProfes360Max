@@ -96,6 +96,8 @@ const CSS = `
 .cancha-msg{min-height:1.2em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .cancha-vel{display:flex;gap:6px;flex:none}
 .cancha-vel button{font:inherit;font-weight:700;color:var(--tiza,#f2f5ef);background:rgba(0,0,0,.25);border:1px solid var(--linea,#2c6a4a);border-radius:8px;padding:2px 10px;cursor:pointer}
+.cancha.limpia{border:0;border-radius:14px}
+.cancha.limpia .cancha-top,.cancha.limpia .cancha-pie{display:none}
 .cancha-vel button.on{border-color:var(--oro,#f2c14e);color:var(--oro,#f2c14e)}
 `;
 const inyectarCss = () => {
@@ -126,6 +128,7 @@ class Cancha {
       if (c.length) { this.yoJ = o.pos === "DEF" ? pick(c) : c[Math.floor(Math.random() * Math.min(2, c.length))]; this.yoJ.yo = o.rol === "Titular"; }
     }
 
+    this.nombrar();
     this.armarDom();
     this.kickoff(Math.random() < .5 ? 0 : 1);
     this.ajustar();
@@ -135,7 +138,7 @@ class Cancha {
 
   /* ----- DOM ----- */
   armarDom() {
-    const r = this.root = el("div", "cancha");
+    const r = this.root = el("div", "cancha" + (this.o.limpio ? " limpia" : ""));
     const top = el("div", "cancha-top");
     this.chips = this.eq.map((T, i) => {
       const w = el("span", "cancha-eq" + (i ? " der" : "")), pt = el("i"), n = el("b", "", T.nombre), f = el("em");
@@ -144,6 +147,9 @@ class Cancha {
     this.cv = el("canvas"); this.ctx = this.cv.getContext("2d");
     const pie = el("div", "cancha-pie"); this.msgEl = el("span", "cancha-msg");
     const vel = el("span", "cancha-vel");
+    this.btnN = el("button", "", ""); this.btnN.type = "button";
+    this.btnN.onclick = () => { this.modoN = (this.modoN + 2) % 3; this.rotularN(); };
+    vel.appendChild(this.btnN);
     [1, 2, 4].forEach(v => {
       const b = el("button", v === 1 ? "on" : "", "x" + v); b.type = "button";
       b.onclick = () => { this.velocidad = v; vel.querySelectorAll("button").forEach(x => x.classList.toggle("on", x === b)); };
@@ -154,12 +160,14 @@ class Cancha {
     this.host.appendChild(r);
     this.actualizarChips();
   }
+  rotularN() { this.btnN.textContent = "Nombres: " + ["no", "pelota", "todos"][this.modoN]; }
   actualizarChips() { this.eq.forEach((T, i) => { this.chips[i].textContent = (T.dir === 1 ? "▶ " : "◀ ") + T.fnombre; }); }
   msg(t) { this.msgEl.textContent = t; clearTimeout(this._tm); this._tm = setTimeout(() => { this.msgEl.textContent = ""; }, 4500); }
 
   ajustar() {
     const w = Math.max(240, Math.floor(this.root.clientWidth || 640)), dpr = Math.min(2, (typeof window !== "undefined" && window.devicePixelRatio) || 1);
     this.dpr = dpr; this.s = w / (L + 2 * MX);
+    if (this.modoN === undefined) { this.modoN = w >= 560 ? 2 : 1; this.rotularN(); }
     const h = Math.round(w * (W + 2 * MY) / (L + 2 * MX));
     this.cv.width = Math.round(w * dpr); this.cv.height = Math.round(h * dpr);
     this.fondo = document.createElement("canvas"); this.fondo.width = this.cv.width; this.fondo.height = this.cv.height;
@@ -201,14 +209,48 @@ class Cancha {
     if (this.recT > 0 && (this.recT -= dt) <= 0) this.receptor = null;
     for (const p of this.todos) { if (p.cd > 0) p.cd -= dt; if (p.prot > 0) p.prot -= dt; }
     this.objetivos(dt);
+    if (this.celeb) this.pasoCeleb(dt);
+    for (const T of this.eq) if (T.dtp && !this.celeb) T.dtp.x = L / 2 + (T.idx ? 10 : -10) + Math.sin(this.t * .25 + T.idx * 2) * 8;
     if (this.g) this.pasoAtaque(dt);
     if (this.fest) this.pasoFesta(dt);
     this.mover(dt);
     this.balon(dt);
-    if ((!this.g || this.g.quites) && !this.fest && !this.tandaOn) this.quites(dt);
+    if ((!this.g || this.g.quites) && !this.fest && !this.tandaOn && !this.celeb) this.quites(dt);
     if (this.cartel && (this.cartel.t += dt) > this.cartel.dur) this.cartel = null;
     if (this.red && (this.red.t += dt) > 1.3) this.red = null;
     for (let i = this.marcas.length - 1; i >= 0; i--) if ((this.marcas[i].t -= dt) <= 0) this.marcas.splice(i, 1);
+  }
+
+  /* ----- Nombres (plantillas de js/data/plantillas/) ----- */
+  nombrar() {
+    this.eq.forEach((T, i) => {
+      const pl = i ? this.o.plRiv : this.o.plMi, lista = pl && pl.jugadores.length ? pl.jugadores : [], usados = new Set();
+      T.dt = (pl && pl.dt) || (i === 0 && this.o.dt) || "";
+      T.dtp = { x: L / 2 + (i ? 10 : -10), y: i ? W + 1.2 : -1.2 };
+      // Los 11 titulares de la plantilla siempre están en cancha: cada uno va al lugar de su puesto o al más parecido.
+      const ord = { ARQ: 0, DEF: 1, MED: 2, DEL: 3 }, tit = lista.slice(0, 11);
+      for (const p of T.jug) {
+        const f = tit.filter(x => !usados.has(x)).sort((a, b) => Math.abs(ord[a.p] - ord[p.rol]) - Math.abs(ord[b.p] - ord[p.rol]))[0];
+        if (f) { usados.add(f); p.nom = f.c; p.fijo = true; }
+      }
+    });
+    if (this.yoJ && this.o.yo) { this.yoJ.nom = this.o.yo; this.yoJ.fijo = true; }
+  }
+  // Jugadores del equipo T nombrados en un texto del relato, en orden de aparición. Si el nombre no está en la cancha, se lo pone a alguien.
+  nombresEn(texto, T) {
+    const out = [], t = texto || "";
+    for (const p of T.jug) if (p.nom && p !== this.yoJ && p.rol !== "ARQ" && t.includes(p.nom)) out.push({ p, i: t.indexOf(p.nom) });
+    const re = /[A-ZÁÉÍÓÚÑ]\. [A-ZÁÉÍÓÚÑ][\wÁÉÍÓÚÑáéíóúñ'’-]+/g; let m;
+    while ((m = re.exec(t))) {
+      if (T.jug.some(q => q.nom === m[0])) continue;
+      // Si el nombre no está en cancha (por ejemplo, tu jugador ocupa su lugar) se lo cede alguien que no sea protagonista de este relato.
+      let pool = T.jug.filter(q => q.rol !== "ARQ" && !q.fijo && q !== this.yoJ && !out.some(o => o.p === q));
+      if (!pool.length) pool = T.jug.filter(q => q.rol !== "ARQ" && q !== this.yoJ && !out.some(o => o.p === q));
+      if (!pool.length) continue;
+      const pref = pool.filter(q => q.rol !== "DEF"), q = pick(pref.length ? pref : pool);
+      q.nom = m[0]; q.fijo = true; out.push({ p: q, i: m.index });
+    }
+    return out.sort((a, b) => a.i - b.i);
   }
 
   /* ----- Posiciones de partida ----- */
@@ -330,6 +372,7 @@ class Cancha {
   balon(dt) {
     const b = this.ball;
     if (this.tandaOn && !this.g) { b.dueno = null; b.vx = b.vy = 0; b.x = L - 11; b.y = GY; return; }
+    if (this.celeb) return;
     if (b.dueno) { const p = b.dueno; b.x = clamp(p.x + p.fx * 1.5, .4, L - .4); b.y = clamp(p.y + p.fy * 1.5, .4, W - .4); b.vx = b.vy = 0; return; }
     b.x += b.vx * dt; b.y += b.vy * dt;
     const f = Math.exp(-.8 * dt); b.vx *= f; b.vy *= f;
@@ -389,7 +432,7 @@ class Cancha {
   }
 
   /* ----- Eventos del partido -> jugadas ----- */
-  jugada(e) {
+  jugada(e, sig) {
     if (this.parado) return Promise.resolve();
     return new Promise(resolve => {
       let hecho = false;
@@ -397,19 +440,19 @@ class Cancha {
       const wd = setTimeout(() => { this.abortar(); fin(); }, 16000 / this.velocidad);   // seguro: nunca deja colgado el partido
       this.libre().then(() => {
         if (this.parado) return fin();
-        try { this.arrancar(e, fin); } catch (err) { console.error(err); this.g = null; fin(); }
+        try { this.arrancar(e, fin, sig); } catch (err) { console.error(err); this.g = null; fin(); }
       });
     });
   }
   abortar() { this.g = null; this.fest = null; this.bloq = false; this.despertar(); }
 
-  arrancar(e, fin) {
+  arrancar(e, fin, sig) {
     if (this.g && this.g.fase === "penal-espera") return this.resolverPenal(e, fin);
     this.efectos(e);
     const plan = this.plan(e);
     if (!plan) return fin();
     if (plan.tipo === "ataque") this.iniciarAtaque(plan, fin);
-    else if (plan.tipo === "penal") this.armarPenal(plan, fin);
+    else if (plan.tipo === "penal") this.armarPenal(plan, fin, sig);
     else this.iniciarTanda(plan, fin);
   }
 
@@ -442,8 +485,8 @@ class Cancha {
   efectos(e) {
     const X = e.x || "", R = this.o.rival;
     if (e.t === "info" && /Termina el primer tiempo/.test(X)) this.medioTiempo();
-    if (e.t === "amarilla") this.tarjeta(e.yo || !X.endsWith(`(${R}).`) ? 0 : 1, "#f5d300", e.yo);
-    if (e.t === "roja") { const lado = e.yo ? 0 : X.includes(` de ${R}.`) ? 1 : 0; this.tarjeta(lado, "#e53935", e.yo); this.expulsar(lado, e.yo); }
+    if (e.t === "amarilla") this.tarjeta(e.yo || !X.endsWith(`(${R}).`) ? 0 : 1, "#f5d300", e.yo, X);
+    if (e.t === "roja") { const lado = e.yo ? 0 : X.includes(` de ${R}.`) ? 1 : 0; this.tarjeta(lado, "#e53935", e.yo, X); this.expulsar(lado, e.yo, X); }
     if (e.t === "cambio" && e.yo && this.yoJ) this.yoJ.yo = /Ingres/.test(X);
     if (e.t === "lesion" && e.yo && this.yoJ) this.yoJ.yo = false;
     this.tactica(e);
@@ -452,15 +495,15 @@ class Cancha {
     for (const T of this.eq) T.dir *= -1;
     this.kickoff(1); this.actualizarChips(); this.msg("Segundo tiempo: los equipos cambian de lado");
   }
-  tarjeta(lado, c, yo) {
-    const T = this.eq[lado], out = T.jug.filter(p => p.rol !== "ARQ");
-    const p = yo && this.yoJ && this.yoJ.eq === T && T.jug.includes(this.yoJ) ? this.yoJ : pick(out);
+  tarjeta(lado, c, yo, X) {
+    const T = this.eq[lado], out = T.jug.filter(p => p.rol !== "ARQ"), nm = this.nombresEn(X, T)[0];
+    const p = yo && this.yoJ && this.yoJ.eq === T && T.jug.includes(this.yoJ) ? this.yoJ : nm ? nm.p : pick(out);
     this.marcas.push({ p, c, t: 2, x: p.x, y: p.y });
   }
-  expulsar(lado, yo) {
-    const T = this.eq[lado], out = T.jug.filter(p => p.rol !== "ARQ");
+  expulsar(lado, yo, X) {
+    const T = this.eq[lado], out = T.jug.filter(p => p.rol !== "ARQ"), nm = this.nombresEn(X, T)[0];
     if (out.length < 8) return;
-    let p = yo && this.yoJ && this.yoJ.eq === T && T.jug.includes(this.yoJ) ? this.yoJ : pick(out);
+    let p = yo && this.yoJ && this.yoJ.eq === T && T.jug.includes(this.yoJ) ? this.yoJ : nm ? nm.p : pick(out);
     if (p === this.yoJ) p.yo = false;
     if (p.rol === "ARQ") p = pick(out);   // si echan al arquero, entra otro y el equipo queda con uno menos de campo
     if (this.ball.dueno === p) { this.ball.dueno = null; }
@@ -514,6 +557,15 @@ class Cancha {
     } else if (plan.yo && yoT && pasa) { carrier = yoT; F = elegirFin(yoT); }
     else if (plan.yo && yoT) { F = yoT; carrier = b.dueno && b.dueno.eq === T && b.dueno !== F ? b.dueno : cerca(out.filter(p => p !== F), b); }
     else { F = elegirFin(null); carrier = cerca(out.filter(p => p !== F), b); }
+    if (plan.fin !== "corte") {
+      const ns = this.nombresEn(plan.tx, T).map(o => o.p);
+      if (ns.length) {
+        const asist = /Asistencia de|pase exquisito/.test(plan.tx);
+        if (plan.yo && yoT && !pasa) { if (/Asistencia de/.test(plan.tx) && ns[0] !== yoT) carrier = ns[0]; }
+        else if (plan.yo && yoT && pasa) F = ns[0];
+        else { F = ns[0]; if (asist && ns[1]) carrier = ns[1]; else if (carrier === F) carrier = cerca(out.filter(p => p !== F), b); }
+      }
+    }
     const Q = { x: metaX - dirA * az(11, 16), y: GY + az(-8, 8) };
     const zona = { x: metaX - dirA * (plan.fin === "corte" ? az(24, 30) : az(22, 28)), y: clamp(GY + az(-12, 12), 14, 54) };
     const g = this.g = {
@@ -523,10 +575,11 @@ class Cancha {
     if (plan.fin === "bloq") g.Db = (plan.lado === "R" && plan.yo && yoD) || cerca(outD, Q);
     if (plan.fin === "corte") g.Dd = (plan.lado === "R" && plan.yo && yoD) || cerca(outD.filter(p => p.rol === "DEF"), zona) || cerca(outD, zona);
   }
-  armarPenal(plan, fin) {
+  armarPenal(plan, fin, sig) {
     const T = this.eq[plan.lado === "M" ? 0 : 1], D = this.eq[T.idx ^ 1], b = this.ball;
     const metaX = T.dir === 1 ? L : 0, dirA = T.dir, out = T.jug.filter(p => p.rol !== "ARQ"), yoT = this.yoActivo(T);
-    const F = plan.yo && /Se hace cargo/.test(plan.tx) && yoT ? yoT : (pick(out.filter(p => p.rol === "DEL")) || pick(out));
+    const nm = sig ? this.nombresEn(sig.x, T)[0] : null;   // el que patea figura en el evento que sigue
+    const F = plan.yo && /Se hace cargo/.test(plan.tx) && yoT ? yoT : nm ? nm.p : (pick(out.filter(p => p.rol === "DEL")) || pick(out));
     const resto = out.filter(p => p !== F), cerca = (arr, ref) => arr.slice().sort((a, c) => d2(a, ref) - d2(c, ref))[0];
     const carrier = cerca(resto.filter(p => p.rol !== "DEF"), b) || cerca(resto, b);   // al que le hacen la falta
     const spot = { x: metaX - dirA * 11, y: GY }, Q = { x: metaX - dirA * az(14, 18), y: GY + az(-6, 6) };
@@ -543,7 +596,8 @@ class Cancha {
   iniciarTanda(plan, fin) {
     const T = this.eq[plan.lado === "M" ? 0 : 1], D = this.eq[T.idx ^ 1], b = this.ball;
     const out = T.jug.filter(p => p.rol !== "ARQ"), yoT = this.yoActivo(T);
-    const F = plan.yo && yoT ? yoT : pick(out), gk = D.jug.find(p => p.rol === "ARQ");
+    const nm = this.nombresEn(plan.tx, T)[0];
+    const F = plan.yo && yoT ? yoT : nm ? nm.p : pick(out), gk = D.jug.find(p => p.rol === "ARQ");
     this.tandaOn = true;
     const spot = { x: L - 11, y: GY };
     b.dueno = null; b.x = spot.x; b.y = spot.y; b.vx = b.vy = 0; b.lastTeam = T.idx;
@@ -695,6 +749,26 @@ class Cancha {
     g.listo();
   }
 
+  // Festejo de campeón (lo usa la cinemática): el equipo corre al centro y salta, el rival se va, cae papel picado.
+  celebrar(idx = 0) {
+    const T = this.eq[idx];
+    this.g = null; this.fest = null; this.bloq = false; this.tandaOn = false; this.modoN = 2; this.rotularN();
+    this.celeb = { T, t: 0, conf: Array.from({ length: 160 }, () => ({ x: az(-2, L + 2), y: az(-W, W), vx: az(-2, 2), vy: az(7, 15), r: az(.5, 1), c: pick([T.color, "#ffffff", "#f2c14e", T.borde]), rot: az(0, 6), w: az(-7, 7) })) };
+    for (const p of this.todos) { p.cond = null; p.prot = 0; }
+  }
+  pasoCeleb(dt) {
+    const f = this.celeb; f.t += dt;
+    const b = this.ball; b.dueno = null; b.vx = b.vy = 0; b.x = L / 2; b.y = GY;
+    const n = f.T.jug.length, dentro = Math.ceil(n / 2);
+    f.T.jug.forEach((p, i) => {   // dos ruedas alrededor de la copa
+      const ext = i % 2, k = Math.floor(i / 2), a = k / (ext ? n - dentro : dentro) * Math.PI * 2 + ext * .5, r = ext ? 11 : 5.8;
+      p.tx = L / 2 + Math.cos(a) * r * 1.25; p.ty = GY + Math.sin(a) * r * .85; p.vm = 1.2;
+    });
+    for (const p of this.eq[f.T.idx ^ 1].jug) { p.tx = p.x; p.ty = p.y < GY ? -5 : W + 5; p.vm = .55; }
+    f.T.dtp.x += (L / 2 - f.T.dtp.x) * Math.min(1, dt * 1.2); f.T.dtp.y += (GY + 2 - f.T.dtp.y) * Math.min(1, dt * 1.2);
+    for (const c of f.conf) { c.x += c.vx * dt; c.y += c.vy * dt; c.rot += c.w * dt; if (c.y > W + 3) { c.y = -3; c.x = az(-2, L + 2); } }
+  }
+
   /* ----- Dibujo ----- */
   dibujarFondo(c) {
     c.fillStyle = "#1a5a32"; c.fillRect(-MX, -MY, L + 2 * MX, W + 2 * MY);
@@ -731,10 +805,17 @@ class Cancha {
       const x = this.red.x === 0 ? -2.2 : L;
       c.fillStyle = `rgba(255,255,255,${.5 * (1 - this.red.t / 1.3)})`; c.fillRect(x, GY - ARCO, 2.2, 2 * ARCO);
     }
-    const ord = this.todos.slice().sort((a, b) => a.y - b.y);
-    for (const p of ord) {
-      const T = p.eq;
-      c.fillStyle = "rgba(0,0,0,.25)"; c.beginPath(); c.ellipse(p.x + .25, p.y + .4, RJ, RJ * .85, 0, 0, 7); c.fill();
+    const ord = this.todos.slice().sort((a, b) => a.y - b.y), ce = this.celeb;
+    for (const T of this.eq) if (T.dt) {
+      const q = T.dtp;
+      c.fillStyle = T.color; c.strokeStyle = T.borde; c.lineWidth = .25; c.beginPath(); c.roundRect(q.x - 1, q.y - 1, 2, 2, .6); c.fill(); c.stroke();
+      c.font = "700 2px 'Barlow Condensed','Arial Narrow',sans-serif"; c.textAlign = "left"; c.lineJoin = "round"; c.lineWidth = .45;
+      const t = "DT " + T.dt.split(/\s+/).slice(-1)[0]; c.strokeStyle = "rgba(0,0,0,.8)"; c.strokeText(t, q.x + 1.6, q.y + .7); c.fillStyle = "#fff"; c.fillText(t, q.x + 1.6, q.y + .7);
+    }
+    for (const p0 of ord) {
+      const T = p0.eq, salto = ce && T === ce.T ? -Math.abs(Math.sin(this.t * 5 + p0.ph)) * 1.4 * Math.min(1, ce.t / 2) : 0;
+      const p = salto ? { ...p0, y: p0.y + salto } : p0;
+      c.fillStyle = "rgba(0,0,0,.25)"; c.beginPath(); c.ellipse(p0.x + .25, p0.y + .4, RJ, RJ * .85, 0, 0, 7); c.fill();
       c.beginPath(); c.arc(p.x, p.y, RJ, 0, 7);
       c.fillStyle = p.rol === "ARQ" ? T.gk : T.color; c.fill();
       c.lineWidth = .28; c.strokeStyle = T.borde; c.stroke();
@@ -742,7 +823,17 @@ class Cancha {
         c.beginPath(); c.arc(p.x, p.y, RJ + .75, 0, 7); c.lineWidth = .35; c.strokeStyle = "#f2c14e"; c.stroke();
         c.font = "700 2.3px 'Barlow Condensed','Arial Narrow',sans-serif"; c.textAlign = "center"; c.fillStyle = "#f2c14e";
         c.strokeStyle = "rgba(0,0,0,.7)"; c.lineWidth = .35; c.strokeText("VOS", p.x, p.y - RJ - 1.4); c.fillText("VOS", p.x, p.y - RJ - 1.4);
+      } else if (p0.nom && this.modoN && (this.modoN === 2 || p0 === this.ball.dueno || p0 === this.receptor || (this.g && (p0 === this.g.F || p0 === this.g.carrier)))) {
+        const t = p0.nom.replace(/^[A-ZÁÉÍÓÚÑ]\.\s*/, "");
+        c.font = "600 2.1px 'Barlow Condensed','Arial Narrow',sans-serif"; c.textAlign = "center"; c.lineJoin = "round"; c.lineWidth = .5;
+        c.strokeStyle = "rgba(0,0,0,.8)"; c.strokeText(t, p.x, p.y + RJ + 2.4); c.fillStyle = "#fff"; c.fillText(t, p.x, p.y + RJ + 2.4);
       }
+    }
+    if (ce) {
+      for (const f of ce.conf) { c.save(); c.translate(f.x, f.y); c.rotate(f.rot); c.fillStyle = f.c; c.fillRect(-f.r, -f.r * .5, f.r * 2, f.r); c.restore(); }
+      c.font = "8px 'Apple Color Emoji','Segoe UI Emoji',sans-serif"; c.textAlign = "center"; c.textBaseline = "middle"; c.fillStyle = "#fff";
+      c.fillText("🏆", L / 2, GY - 3 + Math.sin(this.t * 3) * .8); c.textBaseline = "alphabetic";
+      return;
     }
     for (const m of this.marcas) {
       if (m.p && (m.p.eq.jug.includes(m.p))) { m.x = m.p.x; m.y = m.p.y; }

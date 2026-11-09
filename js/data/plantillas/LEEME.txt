@@ -1,0 +1,3 @@
+Una plantilla por equipo. El archivo se llama como el equipo ("Boca Juniors" -> boca-juniors.js).
+Completá dt y los nombres; los primeros 11 son los titulares. Con menos de 11 nombres se usan nombres al azar.
+Ejemplo de jugador: { n: "Leandro Paredes", p: "MED" }  -> sale como "L. Paredes". Si querés otro nombre corto: { n: "Juan Román Riquelme", c: "J. R. Riquelme", p: "MED" }

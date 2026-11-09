@@ -5,6 +5,7 @@ import { sede } from "./fixture.js";
 import { fuerzaEquipo } from "./data/fuerza.js";
 import { DT_SELECCION } from "./data/selecciones.js";
 import { simularPartido } from "./simulacion.js";
+import { precargar } from "./plantillas.js";
 import { reproducir } from "./partido.js";
 import { guardarTodo } from "./firebase.js";
 import { SELECCION, asegurar, decidirRolSeleccion, aplicarResultadoSeleccion, hayPendientes, resumenSeleccion, tablaElim, posicionElim } from "./seleccion.js";
@@ -56,8 +57,9 @@ export function pantallaSeleccion(el) {
     <div class="fila"><button class="btn main" id="jugar">${sinJugar ? "Simular partido" : "Jugar partido"}</button><button class="btn" id="info">Ver carrera en la Selección</button><button class="btn" id="atras">Volver</button></div>`;
   el.querySelector("#atras").onclick = () => ir("carrera");
   el.querySelector("#info").onclick = () => ir("selinfo");
-  el.querySelector("#jugar").onclick = e => {
+  el.querySelector("#jugar").onclick = async e => {
     e.target.disabled = true;
+    await precargar(SELECCION, m.rival);
     const res = simularPartido({ equipo: SELECCION, rival: m.rival, local: m.local, p, rol, copa: !!m.copa, copaNombre: m.comp });
     const ap = aplicarResultadoSeleccion(p, m, res);
     estado.sesion = null;

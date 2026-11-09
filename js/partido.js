@@ -12,6 +12,9 @@ import { guardarTodo } from "./firebase.js";
 import { abrirTabla } from "./tabla.js";
 import { hayPendientes } from "./seleccion.js";
 import { crearCancha } from "./cancha.js";
+import { precargar, plantillaDe } from "./plantillas.js";
+import { cinematica, tituloDe } from "./cinematica.js";
+import { DT_SELECCION } from "./data/selecciones.js";
 
 // Después de un partido del club: si te convocaron, primero va la Selección; si no, cierre de temporada o seguir.
 const destino = p => hayPendientes(p) ? "carrera" : temporadaTerminada(p.calendario) ? "fin" : "carrera";
@@ -47,6 +50,7 @@ export function pantallaPartido(el) {
   el.querySelector("#gest").onclick = () => ir("gestion");
   el.querySelector("#jugar").onclick = async e => {
     e.target.disabled = true;
+    await precargar(p.equipo, m.rival);   // plantillas (jugadores y DT) de los dos equipos, si existen
     const res = simularPartido({ equipo: p.equipo, rival: m.rival, local: m.local, p, rol, copa });
     const ap = aplicarResultado(p, m, res);
     estado.sesion = null;
@@ -73,7 +77,7 @@ export function reproducir(el, m, res, ap, ctx = {}) {
   // Cancha animada. Si falla se avisa arriba del partido; con las animaciones apagadas en Opciones, se ve solo el texto.
   let cancha = null;
   if (!document.documentElement.classList.contains("sin-anim")) {
-    try { cancha = crearCancha(el.querySelector("#cancha"), { equipo: eq, rival: m.rival, pos: p.posicion, rol: res.rol }); }
+    try { cancha = crearCancha(el.querySelector("#cancha"), { equipo: eq, rival: m.rival, pos: p.posicion, rol: res.rol, plMi: plantillaDe(eq), plRiv: plantillaDe(m.rival), dt: ctx.equipo ? DT_SELECCION : "", yo: p.jugador.apodo || p.jugador.apellido }); }
     catch (err) { console.error(err); cancha = null; el.querySelector("#cancha").innerHTML = `<p class="error">No se pudo armar la cancha: ${esc(err.message)}</p>`; }
   }
   const vel = () => cancha ? cancha.velocidad : 1;
@@ -88,19 +92,27 @@ export function reproducir(el, m, res, ap, ctx = {}) {
     if (cancha) { cancha.parar(); el.querySelector("#cancha").hidden = true; }
     el.querySelector("#saltar").hidden = true;
     marc.textContent = `${res.golesMi} - ${res.golesRiv}`; min.textContent = res.penales ? `Final · penales ${res.penales.mi}-${res.penales.riv}` : "Final";
-    el.querySelector("#resumen").innerHTML = resumen(p, m, res, ap, ctx);
-    const r = el.querySelector("#resumen");
-    r.querySelector("#sig").onclick = () => ctx.siguiente ? ctx.siguiente() : ir(destino(p));
-    const tab = r.querySelector("#tab"); if (tab) tab.onclick = () => abrirTabla(p);
-    r.querySelector("#ges").onclick = () => ir("gestion");
-    window.scrollTo(0, 0);
+    const mostrarResumen = () => {
+      if (!el.isConnected) return;
+      el.querySelector("#resumen").innerHTML = resumen(p, m, res, ap, ctx);
+      const r = el.querySelector("#resumen");
+      r.querySelector("#sig").onclick = () => ctx.siguiente ? ctx.siguiente() : ir(destino(p));
+      const tab = r.querySelector("#tab"); if (tab) tab.onclick = () => abrirTabla(p);
+      r.querySelector("#ges").onclick = () => ir("gestion");
+      window.scrollTo(0, 0);
+    };
+    // Si el resultado te hace campeón, primero va la cinemática (festejo + entrevistas) y después el resumen.
+    const torneo = !document.documentElement.classList.contains("sin-anim") ? tituloDe(ap) : null;
+    if (!torneo) return mostrarResumen();
+    cinematica({ res, eq, rival: m.rival, torneo, plMi: plantillaDe(eq), plRiv: plantillaDe(m.rival), dt: (plantillaDe(eq) || {}).dt || (ctx.equipo ? DT_SELECCION : ""), yo: p.jugador.apodo || p.jugador.apellido, pos: p.posicion })
+      .catch(err => console.error(err)).then(mostrarResumen);
   };
   const paso = async () => {
     if (!el.isConnected || acabado) return;
     if (i >= res.eventos.length) return terminar();
     const e = res.eventos[i];
     // La cancha "actúa" la jugada y recién cuando termina se muestra el evento (así el gol suma cuando la pelota cruza la línea).
-    if (cancha) { try { await cancha.jugada(e); } catch (err) { console.error(err); } }
+    if (cancha) { try { await cancha.jugada(e, res.eventos[i + 1]); } catch (err) { console.error(err); } }
     if (!el.isConnected || acabado) return;
     mostrar();
     const gol = e.t === "gol" || e.t === "golR";
