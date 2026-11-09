@@ -1,27 +1,23 @@
-// Barracas Central
-// Completá el DT y los nombres (podés agregar o borrar filas). Los primeros 11 jugadores son los titulares.
-// p = puesto: ARQ (arquero), DEF, MED o DEL.  Ejemplo: { n: "Leandro Paredes", p: "MED" }  (en el partido sale "L. Paredes")
-// Si ponés menos de 11 nombres, este equipo usa nombres al azar como siempre.
+// Barracas Central - Noviembre 2026
 export default {
-  dt: "",
+  dt: "Damián Ayude",
   jugadores: [
-    { n: "", p: "ARQ" },
-    { n: "", p: "DEF" },
-    { n: "", p: "DEF" },
-    { n: "", p: "DEF" },
-    { n: "", p: "DEF" },
-    { n: "", p: "MED" },
-    { n: "", p: "MED" },
-    { n: "", p: "MED" },
-    { n: "", p: "MED" },
-    { n: "", p: "DEL" },
-    { n: "", p: "DEL" },   // ← hasta acá son los 11 titulares; el resto, suplentes
-    { n: "", p: "ARQ" },
-    { n: "", p: "DEF" },
-    { n: "", p: "DEF" },
-    { n: "", p: "MED" },
-    { n: "", p: "MED" },
-    { n: "", p: "DEL" },
-    { n: "", p: "DEL" },
+    { n: "Juan Espínola", p: "ARQ" },
+    { n: "Nicolás Capraro", p: "DEF" },
+    { n: "Kevin Jappert", p: "DEF" },
+    { n: "Rodrigo Insúa", p: "DEF" },
+    { n: "Rafael Barrios", p: "DEF" },
+    { n: "Esteban Rolón", p: "MED" },
+    { n: "Dardo Miloc", p: "MED" },
+    { n: "Gonzalo Maroni", p: "MED" },
+    { n: "Ivan Tapia", p: "MED" },
+    { n: "Nicolás Orsini", p: "DEL" },
+    { n: "Javier Morales", p: "DEL" },   // ← 11 Titulares
+    { n: "Marcelo Miño", p: "ARQ" },
+    { n: "Nicolás De Martini", p: "DEF" },
+    { n: "Tomás Porra", p: "MED" },
+    { n: "Manuel Duarte", p: "MED" },
+    { n: "Norberto Briasco", p: "DEL" },
+    { n: "Jhonatan Candia", p: "DEL" },
   ]
 };

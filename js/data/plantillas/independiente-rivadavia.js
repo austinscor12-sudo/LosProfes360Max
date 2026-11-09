@@ -1,27 +1,23 @@
-// Independiente Rivadavia
-// Completá el DT y los nombres (podés agregar o borrar filas). Los primeros 11 jugadores son los titulares.
-// p = puesto: ARQ (arquero), DEF, MED o DEL.  Ejemplo: { n: "Leandro Paredes", p: "MED" }  (en el partido sale "L. Paredes")
-// Si ponés menos de 11 nombres, este equipo usa nombres al azar como siempre.
+// Independiente Rivadavia - Noviembre 2026
 export default {
-  dt: "",
+  dt: "Alfredo Berti",
   jugadores: [
-    { n: "", p: "ARQ" },
-    { n: "", p: "DEF" },
-    { n: "", p: "DEF" },
-    { n: "", p: "DEF" },
-    { n: "", p: "DEF" },
-    { n: "", p: "MED" },
-    { n: "", p: "MED" },
-    { n: "", p: "MED" },
-    { n: "", p: "MED" },
-    { n: "", p: "DEL" },
-    { n: "", p: "DEL" },   // ← hasta acá son los 11 titulares; el resto, suplentes
-    { n: "", p: "ARQ" },
-    { n: "", p: "DEF" },
-    { n: "", p: "DEF" },
-    { n: "", p: "MED" },
-    { n: "", p: "MED" },
-    { n: "", p: "DEL" },
-    { n: "", p: "DEL" },
+    { n: "Ezequiel Gómez Riga", p: "ARQ" },
+    { n: "Iván Villalba", p: "DEF" },
+    { n: "Sheyko Studer", p: "DEF" },
+    { n: "Alex Vigo", p: "DEF" },
+    { n: "Tobías Ostchega", p: "DEF" },
+    { n: "Franco Romero", p: "MED" },
+    { n: "Lautaro Ríos", p: "MED" },
+    { n: "Gonzalo Ríos", p: "MED" },
+    { n: "Ezequiel Bonifacio", p: "MED" },
+    { n: "Sebastian Villa", p: "DEL" },
+    { n: "Victorio Ramis", p: "DEL" },   // ← 11 Titulares
+    { n: "Ramiro Macagno", p: "ARQ" },
+    { n: "Luciano Abecasis", p: "DEF" },
+    { n: "Francisco Petrasso", p: "DEF" },
+    { n: "Diego Tonetto", p: "MED" },
+    { n: "Luis Sequeira", p: "DEL" },
+    { n: "Mauricio Asenjo", p: "DEL" },
   ]
 };

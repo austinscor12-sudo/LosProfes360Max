@@ -1,27 +1,23 @@
-// Sarmiento (J)
-// Completá el DT y los nombres (podés agregar o borrar filas). Los primeros 11 jugadores son los titulares.
-// p = puesto: ARQ (arquero), DEF, MED o DEL.  Ejemplo: { n: "Leandro Paredes", p: "MED" }  (en el partido sale "L. Paredes")
-// Si ponés menos de 11 nombres, este equipo usa nombres al azar como siempre.
+// Sarmiento de Junín - Noviembre 2026
 export default {
-  dt: "",
+  dt: "Javier Sanguinetti",
   jugadores: [
-    { n: "", p: "ARQ" },
-    { n: "", p: "DEF" },
-    { n: "", p: "DEF" },
-    { n: "", p: "DEF" },
-    { n: "", p: "DEF" },
-    { n: "", p: "MED" },
-    { n: "", p: "MED" },
-    { n: "", p: "MED" },
-    { n: "", p: "MED" },
-    { n: "", p: "DEL" },
-    { n: "", p: "DEL" },   // ← hasta acá son los 11 titulares; el resto, suplentes
-    { n: "", p: "ARQ" },
-    { n: "", p: "DEF" },
-    { n: "", p: "DEF" },
-    { n: "", p: "MED" },
-    { n: "", p: "MED" },
-    { n: "", p: "DEL" },
-    { n: "", p: "DEL" },
+    { n: "Jerónimo Pourtau", p: "ARQ" },
+    { n: "Franco Paredes", p: "DEF" },
+    { n: "Juan Manuel Insaurralde", p: "DEF" },
+    { n: "Elias López", p: "DEF" },
+    { n: "Gabriel Díaz", p: "DEF" },
+    { n: "Manuel García", p: "MED" },
+    { n: "Yair Arismendi", p: "MED" },
+    { n: "Nicolás Gaitán", p: "MED" },
+    { n: "Valentín Burgoa", p: "MED" },
+    { n: "Lisandro López", p: "DEL" },
+    { n: "Iván Morales", p: "DEL" },   // ← 11 Titulares
+    { n: "Thiago Ayala", p: "ARQ" },
+    { n: "Gaston Sauro", p: "DEF" },
+    { n: "Emiliano Méndez", p: "MED" },
+    { n: "Federico Paradela", p: "MED" },
+    { n: "Manuel Mónaco", p: "MED" },
+    { n: "Gabriel Gudiño", p: "DEL" },
   ]
 };
