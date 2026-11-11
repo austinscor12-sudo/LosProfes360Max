@@ -5,6 +5,7 @@ import { usd, iniciarFin, obtenerRenov, pedirMas, firmarRenov, fichar, comenzarT
 import { LIGAS } from "./data/equipos.js";
 import { guardarTodo } from "./firebase.js";
 import { esArgentino, asegurar } from "./seleccion.js";
+import { textoCopasProx } from "./continental.js";
 
 const dato = (l, v) => `<div class="dato"><span>${l}</span><b>${v}</b></div>`;
 
@@ -22,9 +23,9 @@ export function pantallaFin(el) {
     return `<h2>Temporada ${p.temporada} terminada</h2><p class="sub">${esc(p.equipo)}</p>
       <div class="stats"><div class="stat"><b>${t.partidos}</b><span>Partidos</span></div><div class="stat"><b>${t.goles}</b><span>Goles</span></div><div class="stat"><b>${t.asist}</b><span>Asistencias</span></div><div class="stat"><b>${nota}</b><span>Nota media</span></div></div>
       <div class="panel">${dato("Titular en", `${t.titular} partidos`)}${dato("Minutos", t.minutos)}${dato("Figura del partido", `${t.figuras} veces`)}${dato("Tarjetas", `${t.amarillas} amarillas · ${t.rojas} rojas`)}${dato("Lesiones", t.lesiones)}${f.finanzas?.renta ? dato("Renta del departamento", "+" + usd(f.finanzas.renta)) : ""}${f.finanzas?.rend ? dato("Fondo de inversión", `${f.finanzas.pct > 0 ? "+" : ""}${f.finanzas.pct}%`) : ""}
-        ${Object.entries(t.pos).map(([c, pos]) => dato(esc(c), `${pos}° puesto`)).join("")}${t.copa ? dato("Copa Argentina", esc(t.copa)) : ""}
+        ${Object.entries(t.pos).map(([c, pos]) => dato(esc(c), `${pos}° puesto`)).join("")}${t.copa ? dato("Copa Argentina", esc(t.copa)) : ""}${Object.entries(t.cont || {}).map(([c, r]) => dato(esc(c), esc(r))).join("")}
         ${esArgentino(p) && asegurar(p).temp.pj ? dato("🇦🇷 Selección", `${asegurar(p).temp.pj} partidos · ${asegurar(p).temp.goles} goles · ${asegurar(p).temp.asist} asist.`) : ""}
-        ${titulos.map(x => `<p class="nota">🏆 Campeón: ${esc(x.titulo)}</p>`).join("")}</div>
+        ${titulos.map(x => `<p class="nota">🏆 Campeón: ${esc(x.titulo)}</p>`).join("")}${f.copas ? `<p class="nota">🌎 ${esc(f.copas.texto)}</p>` : ""}</div>
       <div class="fila"><button class="btn main" id="sig">Continuar</button></div>`;
   };
   const evolucion = () => `<h2>Evolución</h2><p class="sub">Cumplís ${f.evo.edad} años.</p>
@@ -50,6 +51,7 @@ export function pantallaFin(el) {
     <div class="fila"><button class="btn main" id="colgar">Colgar los botines</button></div>`;
   const nueva = () => `<h2>Temporada ${p.temporada + 1}</h2><p class="sub">${esc(p.equipo)} · ${esc(p.ligaNombre)}${f.ascenso ? " (ascenso)" : f.descenso ? " (descenso)" : ""}</p>
     <div class="panel">${dato("Edad", p.jugador.edad)}${dato("Valoración", p.progreso.overall)}${dato("Contrato", `${p.contrato.anios} año${p.contrato.anios === 1 ? "" : "s"} · ${usd(p.contrato.salario)}/mes`)}</div>
+    ${textoCopasProx(p) ? `<p class="nota" style="margin-top:12px">🌎 ${esc(textoCopasProx(p))}</p>` : ""}
     <p class="sub" style="margin-top:12px">Vas a arrancar descansado, con un calendario nuevo.</p>
     <div class="fila"><button class="btn main" id="go">Comenzar temporada</button></div>`;
 

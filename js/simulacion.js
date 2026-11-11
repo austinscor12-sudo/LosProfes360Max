@@ -29,7 +29,7 @@ const resultado = g => {
   if (u < g + .50) return "afuera"; if (u < g + .59) return "bloq"; return "nada";
 };
 
-export function simularPartido({ equipo, rival, local, p, rol, copa, copaNombre }) {
+export function simularPartido({ equipo, rival, local, p, rol, copa, copaNombre, ventaja = 0 }) {   // ventaja: diferencia de gol que traés de la ida (vuelta de una llave)
   const j = p.jugador, A = p.atributos, pos = p.posicion;
   const yo = j.apodo || j.apellido;
   // Nombres de compañeros y rivales: salen de la plantilla del equipo (js/data/plantillas/) o, si no hay, al azar.
@@ -196,8 +196,8 @@ export function simularPartido({ equipo, rival, local, p, rol, copa, copaNombre 
 
   /* ---- Penales (Copa Argentina) ---- */
   let penales = null;
-  if (copa && gM === gR) {
-    push(93, "info", `Empate ${gM}-${gR}: ${copaNombre || "la Copa Argentina"} se define por penales.`);
+  if (copa && gM + ventaja === gR) {
+    push(93, "info", ventaja ? `Global igualado (${gM + ventaja}-${gR}): ${copaNombre || "la llave"} se define por penales.` : `Empate ${gM}-${gR}: ${copaNombre || "la Copa Argentina"} se define por penales.`);
     const yoToma = juega && fin >= 90 && pos !== "ARQ" && prob(.55), turno = yoToma ? ent(1, 5) : 0;
     const yoAtajo = juega && fin >= 90 && pos === "ARQ";
     let a = 0, b = 0;
@@ -216,7 +216,7 @@ export function simularPartido({ equipo, rival, local, p, rol, copa, copaNombre 
     }
     penales = { mi: a, riv: b };
   }
-  const clasificado = gM > gR || (gM === gR && !!penales && penales.mi > penales.riv);
+  const clasificado = gM + ventaja > gR || (gM + ventaja === gR && !!penales && penales.mi > penales.riv);
   push(93, "fin", `Final del partido: ${equipo} ${gM} - ${gR} ${rival}${penales ? ` (penales ${penales.mi}-${penales.riv})` : ""}.`);
 
   /* ---- Estadísticas de fondo y nota ---- */

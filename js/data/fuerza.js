@@ -1,5 +1,6 @@
 import { PRIMERA } from "./equipos.js";
 import { FUERZA_SEL } from "./selecciones.js";
+import { FUERZA_SUD } from "./continental.js";
 
 // Nivel aproximado de cada equipo (escala ~50-80). Son valores míos, NO oficiales: editalos a gusto.
 export const FUERZA = {
@@ -31,7 +32,9 @@ export const FUERZA = {
   "Paris Saint-Germain": 88, "Monaco": 81, "Marseille": 80, "Lille": 79, "Lyon": 79, "Lens": 78, "Nice": 77, "Rennes": 77, "Strasbourg": 76,
   "Brest": 74, "Toulouse": 73, "Paris FC": 72, "Auxerre": 71, "Angers": 70, "Lorient": 70, "Le Havre": 69, "Troyes": 68, "Le Mans": 67,
   // Selecciones nacionales (ver selecciones.js)
-  ...FUERZA_SEL
+  ...FUERZA_SEL,
+  // Clubes sudamericanos de las copas (ver continental.js)
+  ...FUERZA_SUD
 };
 
 // Los equipos de Primera Nacional sin valor propio rinden como un equipo de ascenso (54).

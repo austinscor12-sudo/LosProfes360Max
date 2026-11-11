@@ -1,5 +1,5 @@
 export const COMPETICIONES = {
-  AR1:["Torneo Apertura","Torneo Clausura","Copa Argentina","Trofeo de Campeones","Supercopa Argentina","Copa Libertadores (clasificación)","Copa Sudamericana (clasificación)"],
+  AR1:["Torneo Apertura","Torneo Clausura","Tabla Anual (Campeón de Liga)","Copa Argentina","Trofeo de Campeones","Supercopa Argentina","Copa Libertadores","Copa Sudamericana","Recopa Sudamericana"],
   AR2:["Primera Nacional (Zona + Reducido)","Copa Argentina"],
   EN1:["Premier League"],
   ES1:["LaLiga"],

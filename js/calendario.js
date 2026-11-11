@@ -1,6 +1,7 @@
 import { ir, estado } from "./router.js";
 import { esc } from "./util.js";
 import { textoPartido, sede } from "./fixture.js";
+import { esContinental } from "./continental.js";
 
 // Resultado de un partido ya jugado, con el orden local-visitante que usa la simulación.
 function textoJugado(m, equipo) {
@@ -27,7 +28,7 @@ export function pantallaCalendario(el) {
     <div class="fila"><button class="btn" id="atras">Volver</button></div>`;
   const pintar = () => {
     el.querySelectorAll(".tab").forEach(t => t.classList.toggle("sel", t.dataset.c === sel));
-    const nota = sel === "Copa Argentina" ? `<p class="sub">Eliminación directa en cancha neutral. Las próximas rondas se definen según tus resultados.</p>` : "";
+    const nota = sel === "Copa Argentina" ? `<p class="sub">Eliminación directa en cancha neutral. Las próximas rondas se definen según tus resultados.</p>` : esContinental(sel) ? `<p class="sub">Los cruces de eliminación directa se suman al calendario a medida que avanzás.</p>` : "";
     el.querySelector("#lista").innerHTML = nota + cal.filter(m => m.comp === sel).map(m => m.jugado === true ? `
       <div class="item"><span>${esc(m.etiqueta)}</span><div>${textoJugado(m, p.equipo)}</div></div>` : `
       <div class="item"><span>${esc(m.etiqueta)}</span><b>${esc(textoPartido(m, p.equipo))}</b>

@@ -8,6 +8,7 @@ import { crearLiga } from "./liga.js";
 import { efectos, nuevasFinanzas, cierreFinanzas } from "./finanzas.js";
 import { nuevoCelular } from "./celular.js";
 import { nuevaVida } from "./vida.js";
+import { asegurarCopas, iniciarCopasTemporada, cerrarCopas } from "./continental.js";
 
 const ent = (a, b) => Math.floor(Math.random() * (b - a + 1)) + a;
 const lim = (n, a, b) => Math.max(a, Math.min(b, n));
@@ -88,6 +89,7 @@ export function completarPartida(p) {
   set("plan", () => ({ foco: FOCO_POR_POS[p.posicion] || Object.keys(p.atributos)[0], intensidad: "normal" }));
   set("xp", {}); set("temp", nuevaTemp); set("tablas", {}); set("historial", []); set("palmares", []); set("traspasos", []); set("ahorros", 0); set("finanzas", nuevasFinanzas); set("celular", () => nuevoCelular(p)); set("vida", nuevaVida);
   set("contrato", () => ({ anios: ent(2, 3), salario: salarioPara(valorMercado(ovr, j.edad, p.potencial)) }));
+  if (asegurarCopas(p)) c = true;   // copas sudamericanas y títulos de liga
   return c;
 }
 
@@ -96,10 +98,10 @@ const PASIVO = .05;   // fracción de la XP del foco que reciben, de forma pasiv
 const edadF = e => e <= 20 ? 1.5 : e <= 23 ? 1.25 : e <= 26 ? 1 : e <= 29 ? .7 : e <= 32 ? .4 : .2;
 
 // Se llama una vez por partido de tu equipo (una "semana"). jug = estadísticas del partido o null si no jugaste.
-export function entrenarSemana(p, jug) {
+export function entrenarSemana(p, jug, extra = false) {   // extra = partido de copa internacional: no suma ahorros y da la mitad de experiencia
   const out = { mejoras: [], lesion: null, recuperado: null };
   const I = INTENSIDADES[p.lesion ? "suave" : p.plan.intensidad];
-  const edad = p.jugador.edad, E = efectos(p);
+  const edad = p.jugador.edad, E = efectos(p), XP = I.xp * (extra ? .5 : 1);
 
   // Lesión: cuenta un partido menos (salvo la semana en que te lesionaste).
   if (p.lesion) {
@@ -109,7 +111,7 @@ export function entrenarSemana(p, jug) {
   // Fatiga y forma
   p.fatiga = lim(Math.round((p.fatiga + (jug?.minutos || 0) / 90 * 14 + I.fatiga + E.fatiga) * .75), 0, 100);
   p.forma = Math.round(p.forma + (E.formaBase - p.forma) * .15);
-  p.ahorros = (p.ahorros || 0) + Math.round(p.contrato.salario * .4);
+  if (!extra) p.ahorros = (p.ahorros || 0) + Math.round(p.contrato.salario * .4);
 
   // Experiencia de entrenamiento
   const gap = p.potencial - p.progreso.overall;
@@ -121,9 +123,9 @@ export function entrenarSemana(p, jug) {
     while (p.xp[k] >= 100 && p.atributos[k] < tope) { p.xp[k] -= 100; p.atributos[k]++; out.mejoras.push({ k, a: p.atributos[k] }); }
     if (p.atributos[k] >= tope) p.xp[k] = Math.min(p.xp[k], 99);
   };
-  ganar(p.plan.foco, I.xp * edadF(edad) * gf);
-  if (I.xp) ganar(pick(Object.keys(p.atributos).filter(k => k !== p.plan.foco)), I.xp * edadF(edad) * gf * .3);
-  if (I.xp) for (const k of Object.keys(p.atributos)) if (k !== p.plan.foco) ganar(k, I.xp * edadF(edad) * gf * PASIVO);
+  ganar(p.plan.foco, XP * edadF(edad) * gf);
+  if (I.xp) ganar(pick(Object.keys(p.atributos).filter(k => k !== p.plan.foco)), XP * edadF(edad) * gf * .3);
+  if (I.xp) for (const k of Object.keys(p.atributos)) if (k !== p.plan.foco) ganar(k, XP * edadF(edad) * gf * PASIVO);
   if (jug?.nota) ganar(FOCO_POR_POS[p.posicion], Math.max(0, jug.nota - 6) * 4 * edadF(edad));
   p.progreso.overall = calcularOverall(p.posicion, p.atributos);
 
@@ -240,7 +242,7 @@ export function iniciarFin(p) {
   const ascenso = p.liga === "AR2" && pos["Primera Nacional"] > 0 && pos["Primera Nacional"] <= 2;
   const ap = pos["Torneo Apertura"], cl = pos["Torneo Clausura"];
   const descenso = p.liga === "AR1" && (pos.Anual ? pos.Anual >= 29 : (ap && cl && (ap + cl) / 2 >= 14));
-  return { paso: 0, evo, finanzas: cierreFinanzas(p), ofertas: generarOfertas(p, p.contrato.anios === 0), ascenso, descenso, fichado: false, forzado: evo.edad >= EDAD_RETIRO_FORZADO };
+  return { paso: 0, evo, copas: cerrarCopas(p), finanzas: cierreFinanzas(p), ofertas: generarOfertas(p, p.contrato.anios === 0), ascenso, descenso, fichado: false, forzado: evo.edad >= EDAD_RETIRO_FORZADO };
 }
 // Primera: liga real (zonas + fixture) si el club está entre los 30 de la liga; si no, calendario simple.
 function armarCalendario(p) {
@@ -253,6 +255,7 @@ export function comenzarTemporada(p) {
   if (p.fin.descenso) cambiarLiga(p, "AR2");
   p.temporada++; p.temp = nuevaTemp(); p.tablas = {};
   armarCalendario(p);
+  asegurarCopas(p); iniciarCopasTemporada(p);   // Libertadores / Sudamericana / Recopa si tu club clasificó
   p.fatiga = Math.round(p.fatiga * .3); p.forma = 60;
   if (p.lesion) { p.lesion.restantes -= 3; if (p.lesion.restantes <= 0) p.lesion = null; }
   p.renov = null; p.fin = null;

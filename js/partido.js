@@ -31,7 +31,7 @@ export function pantallaPartido(el) {
   const p = estado.partida, m = p.calendario.find(x => !x.jugado);
   if (!m) return ir("carrera");
   if (!estado.sesion || estado.sesion.id !== m.id) estado.sesion = { id: m.id, rol: decidirRol(p) };
-  const rol = estado.sesion.rol, copa = m.comp === "Copa Argentina", sinJugar = rol === "Lesionado" || rol === "No convocado";
+  const rol = estado.sesion.rol, copa = m.comp === "Copa Argentina" || !!m.copa, sinJugar = rol === "Lesionado" || rol === "No convocado";
   const les = p.lesion;
   el.innerHTML = `
     <h2>Día de partido</h2><p class="sub">${esc(m.comp)} · ${esc(m.etiqueta)} · ${sede(m)}</p>
@@ -42,7 +42,7 @@ export function pantallaPartido(el) {
       <p class="sub" style="margin:8px 0">${MENSAJE_ROL[rol]}${les ? ` (${esc(les.nombre)}: ${les.restantes} partido${les.restantes === 1 ? "" : "s"} más)` : ""}</p>
       <div class="attr"><span>Fatiga</span>${barra(p.fatiga, p.fatiga > 60)}<b>${p.fatiga}</b></div>
       <div class="attr"><span>Forma</span>${barra(p.forma)}<b>${p.forma}</b></div>
-      ${copa ? `<p class="sub" style="margin-top:10px">Copa Argentina: si hay empate se define por penales.</p>` : ""}
+      ${m.leg === 2 ? `<p class="sub" style="margin-top:10px">Partido de vuelta: si el global queda igualado se define por penales.</p>` : m.leg === 1 ? `<p class="sub" style="margin-top:10px">Partido de ida: la llave se define en la vuelta.</p>` : copa ? `<p class="sub" style="margin-top:10px">${m.cont ? esc(m.comp) : "Copa Argentina"}: si hay empate se define por penales.</p>` : ""}
     </div>
     <p class="error" id="err"></p>
     <div class="fila"><button class="btn main" id="jugar">${sinJugar ? "Simular partido" : "Jugar partido"}</button><button class="btn" id="gest">Entrenamiento y contrato</button><button class="btn" id="atras">Volver</button></div>`;
@@ -51,7 +51,7 @@ export function pantallaPartido(el) {
   el.querySelector("#jugar").onclick = async e => {
     e.target.disabled = true;
     await precargar(p.equipo, m.rival);   // plantillas (jugadores y DT) de los dos equipos, si existen
-    const res = simularPartido({ equipo: p.equipo, rival: m.rival, local: m.local, p, rol, copa });
+    const res = simularPartido({ equipo: p.equipo, rival: m.rival, local: m.local, p, rol, copa, ventaja: m.ventaja || 0, copaNombre: m.cont ? m.comp : undefined });
     const ap = aplicarResultado(p, m, res);
     estado.sesion = null;
     // Se guarda antes de mostrar el partido: si cerrás la pestaña a mitad, el resultado ya cuenta.

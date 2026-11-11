@@ -42,7 +42,7 @@ const CSS = `
 
 // Detecta si el resultado te coronó campeón y devuelve { nombre: "Copa Argentina", de: "de la Copa Argentina" } (o null).
 export const tituloDe = ap => {
-  const t = [ap && ap.copa, ...((ap && ap.cierres) || []), ...((ap && ap.seleccion) || [])].find(x => /campe[oó]n/i.test(x || ""));
+  const t = [ap && ap.copa, ...((ap && ap.cierres) || []), ...((ap && ap.seleccion) || [])].find(x => /campe[oó]n(?![a-záéíóúñ])/i.test(x || ""));
   if (!t) return null;
   const m = /campe[oó]n\s+(de(?:l)?\s+.+?)[.!]*$/i.exec(t.replace(/[¡🏆]/g, "").trim());
   if (!m) return { nombre: "el torneo", de: "del torneo" };

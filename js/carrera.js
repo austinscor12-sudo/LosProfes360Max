@@ -13,6 +13,7 @@ import { PRIMERA, NACIONAL } from "./data/equipos.js";
 import { escudoStyle, colorEquipo } from "./data/colores.js";
 import { esArgentino, hayPendientes } from "./seleccion.js";
 import { panelSeleccion } from "./pantallaseleccion.js";
+import { panelCopas } from "./continental.js";
 
 // ==========================================
 // BASE DE DATOS: EQUIPOS (EDITÁ ESTO PARA TU 2026)
@@ -51,7 +52,7 @@ export function pantallaCarrera(el) {
 
   // Estadísticas colectivas del equipo
   let misPuntos = 0, misPG = 0, misPE = 0, misPP = 0;
-  p.calendario.filter(m => m.jugado === true && (!p.fixture || m.torneo)).forEach(m => {
+  p.calendario.filter(m => m.jugado === true && !m.cont && (!p.fixture || m.torneo)).forEach(m => {
     const esLocal = m.local !== false;
     const aFavor = esLocal ? (m.resultado?.local || 0) : (m.resultado?.visitante || 0);
     const enContra = esLocal ? (m.resultado?.visitante || 0) : (m.resultado?.local || 0);
@@ -84,6 +85,8 @@ export function pantallaCarrera(el) {
     <div class="panel"><h2>Temporada ${p.temporada}</h2>
       <div class="stats" style="margin:12px 0 0">${stat("Partidos", t.partidos)}${stat("Goles", t.goles)}${stat("Asistencias", t.asist)}${stat("Nota media", nota)}</div>
       ${t.copa ? `<p class="sub" style="margin:10px 0 0">Copa Argentina: ${esc(t.copa)}</p>` : ""}</div>
+
+    ${panelCopas(p)}
 
     ${esArgentino(p) ? panelSeleccion(p) : ""}
 

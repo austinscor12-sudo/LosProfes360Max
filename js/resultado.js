@@ -6,6 +6,7 @@ import { registrarFecha, calcularTabla } from "./liga.js";
 import { chequearVentana } from "./seleccion.js";
 import { generarCelular } from "./celular.js";
 import { generarVida } from "./vida.js";
+import { registrarContinental, cerrarTorneoLiga, cerrarAnual, chequearFinales } from "./continental.js";
 
 const lim = (n, a, b) => Math.max(a, Math.min(b, n));
 
@@ -45,10 +46,11 @@ export function aplicarResultado(p, m, res) {
 
   // Lesión en el partido y semana de entrenamiento
   if (res.lesion) out.lesion = aplicarLesion(p, res.lesion);
-  const e = entrenarSemana(p, j.minutos ? j : null);
+  const e = entrenarSemana(p, j.minutos ? j : null, !!m.cont);   // los partidos de copas internacionales suman fatiga pero no ahorros ni tanta experiencia
   out.mejoras = e.mejoras; out.lesionEntreno = e.lesion; out.recuperado = e.recuperado;
 
-  if (m.comp !== "Copa Argentina") {
+  if (m.cont) registrarContinental(p, m, res, out);   // Libertadores, Sudamericana, Recopa, Trofeo y Supercopa
+  else if (m.comp !== "Copa Argentina") {
     const real = p.fixture && m.torneo;   // liga real (zonas) o calendario simple con tabla propia
     if (real) { registrarFecha(p, m); out.tabla = { comp: m.comp, ...puesto(p, [m.torneo], false) }; }
     else { actualizarTabla(p, m, gm, gr); out.tabla = { comp: m.comp, ...posicionEn(p, m.comp) }; }
@@ -56,12 +58,14 @@ export function aplicarResultado(p, m, res) {
       t.pos[m.comp] = out.tabla.pos;
       out.cierres.push(`${m.comp}: terminaste ${out.tabla.pos}° de ${out.tabla.total}${real ? " en tu zona" : ""}.`);
       if (!real && out.tabla.pos === 1) { p.palmares.push({ temporada: p.temporada, titulo: m.comp }); out.cierres.push(`¡Campeón del ${m.comp}!`); }
-      if (real && m.torneo === "CL") { const a = puesto(p, ["AP", "CL"], true); t.pos.Anual = a.pos; out.cierres.push(`Tabla anual: ${a.pos}° de 30.`); }
+      if (real) cerrarTorneoLiga(p, m, out, out.tabla.pos);   // ¡salir primero en tu zona es ser campeón!
+      if (real && m.torneo === "CL") { const a = puesto(p, ["AP", "CL"], true); t.pos.Anual = a.pos; out.cierres.push(`Tabla anual: ${a.pos}° de 30.`); cerrarAnual(p, out); }
     }
   } else if (res.clasificado) {
     if (m.etiqueta === "Final") { t.copa = "Campeón"; p.palmares.push({ temporada: p.temporada, titulo: "Copa Argentina" }); out.copa = "¡Campeón de la Copa Argentina!"; }
     else { const s = siguienteCopa(p.calendario, m, p.equipo); t.copa = `Clasificado a ${s.etiqueta}`; out.copa = `Pasaste a ${s.etiqueta} de la Copa Argentina.`; }
   } else { t.copa = `Eliminado en ${m.etiqueta}`; out.copa = `Eliminados de la Copa Argentina en ${m.etiqueta}.`; }
+  chequearFinales(p, out);   // Trofeo de Campeones y Supercopa, cuando terminan la liga y la Copa Argentina
   generarCelular(p, m, res, out);
   generarVida(p, m, res);
   out.seleccion = chequearVentana(p) || [];   // ¿llegó una fecha FIFA? Scaloni da la lista
